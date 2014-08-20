@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script
+	src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script>
+	$(document).ready(function()
+    {
+	    $.ajax(
+	    {
+	        type : "GET",
+	        dataType : "json",
+	        url : "/movies/director/Charles%20Chaplin",
+	        success : function(result)
+	        {
+		        if (result.success)
+		        {
+			        if (result.data.length === 0)
+			        {
+				        alert('No results');
+				        return;
+			        }
+			        else
+			        {
+				        alert(result.data[0].distributor);
+				        $('body').html(JSON.stringify(result.data));
+			        }
+		        }
+		        else
+		        {
+			        alert('fail');
+			        alert(JSON.stringify(result.errorMessage));
+		        }
+	        },
+	        error : function(request, status, error)
+	        {
+		        alert('Generic Error\n\n' + JSON.stringify(request));
+	        }
+	    });
+    });
+</script>
+</head>
+<body>
+</body>
+</html>
+
