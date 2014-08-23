@@ -13,4 +13,5 @@
 
 	<mvc:annotation-driven />
 	<bean id="cache" class="com.ozan.sfmovies.model.Cache" />
+	<bean id="addressConverter" class="com.ozan.sfmovies.geodata.AddressConverter" />
 </beans>

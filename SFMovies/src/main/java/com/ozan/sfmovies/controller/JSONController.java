@@ -1,8 +1,18 @@
 package com.ozan.sfmovies.controller;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.PostConstruct;
+
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,24 +31,39 @@ import com.ozan.sfmovies.model.Response;
 @RequestMapping("/")
 public class JSONController
 {
-
+	private static Logger logger = LoggerFactory.getLogger(JSONController.class);
 	@Autowired
 	private Cache cache;
+
+	@PostConstruct
+	public void init()
+	{
+		final InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("data.json");
+		final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+		final ObjectMapper mapper = new ObjectMapper();
+		final ArrayList<Movie> movies;
+		try
+		{
+			movies = mapper.readValue(reader, new TypeReference<List<Movie>>()
+			{
+			});
+		}
+		catch (final IOException e)
+		{
+			logger.error("Unable to read file", e);
+			return;
+		}
+		for (final Movie newMovie : movies)
+		{
+			this.cache.addMovie(newMovie, false);
+		}
+	}
 
 	@RequestMapping(value = "newMovie", method = RequestMethod.POST, consumes = "application/json")
 	@ResponseBody
 	public void newMovie(@RequestBody final Movie newMovie)
 	{
-		this.addMovie(newMovie);
-	}
-
-	private void addMovie(final Movie newMovie)
-	{
-		if (this.cache.contains(newMovie))
-		{
-			return;
-		}
-		this.cache.addMovie(newMovie);
+		this.cache.addMovie(newMovie, true);
 	}
 
 	@RequestMapping(value = "newMovies", method = RequestMethod.POST, consumes = "application/json")
@@ -47,7 +72,7 @@ public class JSONController
 	{
 		for (final Movie newMovie : newMovies)
 		{
-			this.addMovie(newMovie);
+			this.cache.addMovie(newMovie, true);
 		}
 	}
 
@@ -70,13 +95,11 @@ public class JSONController
 
 	@RequestMapping(value = "actor/{actorName}", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
-	public ResponseEntity<Response> actorFilter(
-			@PathVariable("actorName") final String actorName)
+	public ResponseEntity<Response> actorFilter(@PathVariable("actorName") final String actorName)
 	{
 		if (actorName == null)
 		{
-			return new ResponseEntity<Response>(new Response(
-					"Missing parameter: actorName"), HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<Response>(new Response("Missing parameter: actorName"), HttpStatus.BAD_REQUEST);
 		}
 		final List<Movie> movies = this.cache.getMoviesByActor(actorName);
 		return new ResponseEntity<Response>(new Response(movies), HttpStatus.OK);
@@ -84,13 +107,11 @@ public class JSONController
 
 	@RequestMapping(value = "director/{directorName}", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
-	public ResponseEntity<Response> directorFilter(
-			@PathVariable("directorName") final String directorName)
+	public ResponseEntity<Response> directorFilter(@PathVariable("directorName") final String directorName)
 	{
 		if (directorName == null)
 		{
-			return new ResponseEntity<Response>(new Response(
-					"Missing parameter: directorName"), HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<Response>(new Response("Missing parameter: directorName"), HttpStatus.BAD_REQUEST);
 		}
 		final List<Movie> movies = this.cache.getMoviesByDirector(directorName);
 		return new ResponseEntity<Response>(new Response(movies), HttpStatus.OK);
@@ -98,45 +119,35 @@ public class JSONController
 
 	@RequestMapping(value = "distributor/{distributorName}", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
-	public ResponseEntity<Response> distributorFilter(
-			@PathVariable("distributorName") final String distributorName)
+	public ResponseEntity<Response> distributorFilter(@PathVariable("distributorName") final String distributorName)
 	{
 		if (distributorName == null)
 		{
-			return new ResponseEntity<Response>(new Response(
-					"Missing parameter: distributorName"),
-					HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<Response>(new Response("Missing parameter: distributorName"), HttpStatus.BAD_REQUEST);
 		}
-		final List<Movie> movies = this.cache
-				.getMoviesByDistributor(distributorName);
+		final List<Movie> movies = this.cache.getMoviesByDistributor(distributorName);
 		return new ResponseEntity<Response>(new Response(movies), HttpStatus.OK);
 	}
 
 	@RequestMapping(value = "productionCompany/{productionCompanyName}", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
-	public ResponseEntity<Response> productionCompanyFilter(
-			@PathVariable("productionCompanyName") final String productionCompanyName)
+	public ResponseEntity<Response> productionCompanyFilter(@PathVariable("productionCompanyName") final String productionCompanyName)
 	{
 		if (productionCompanyName == null)
 		{
-			return new ResponseEntity<Response>(new Response(
-					"Missing parameter: productionCompanyName"),
-					HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<Response>(new Response("Missing parameter: productionCompanyName"), HttpStatus.BAD_REQUEST);
 		}
-		final List<Movie> movies = this.cache
-				.getMoviesByProductionCompany(productionCompanyName);
+		final List<Movie> movies = this.cache.getMoviesByProductionCompany(productionCompanyName);
 		return new ResponseEntity<Response>(new Response(movies), HttpStatus.OK);
 	}
 
 	@RequestMapping(value = "writer/{writerName}", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
-	public ResponseEntity<Response> writerFilter(
-			@PathVariable("writerName") final String writerName)
+	public ResponseEntity<Response> writerFilter(@PathVariable("writerName") final String writerName)
 	{
 		if (writerName == null)
 		{
-			return new ResponseEntity<Response>(new Response(
-					"Missing parameter: writerName"), HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<Response>(new Response("Missing parameter: writerName"), HttpStatus.BAD_REQUEST);
 		}
 		final List<Movie> movies = this.cache.getMoviesByWriter(writerName);
 		return new ResponseEntity<Response>(new Response(movies), HttpStatus.OK);
@@ -144,16 +155,13 @@ public class JSONController
 
 	@RequestMapping(value = "releaseYear/{releaseYear}", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
-	public ResponseEntity<Response> productionCompanyFilter(
-			@PathVariable("releaseYear") final Integer releaseYear)
+	public ResponseEntity<Response> productionCompanyFilter(@PathVariable("releaseYear") final Integer releaseYear)
 	{
 		if (releaseYear == null)
 		{
-			return new ResponseEntity<Response>(new Response(
-					"Missing parameter: releaseYear"), HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<Response>(new Response("Missing parameter: releaseYear"), HttpStatus.BAD_REQUEST);
 		}
-		final List<Movie> movies = this.cache
-				.getMoviesByReleaseYear(releaseYear);
+		final List<Movie> movies = this.cache.getMoviesByReleaseYear(releaseYear);
 		return new ResponseEntity<Response>(new Response(movies), HttpStatus.OK);
 	}
 }

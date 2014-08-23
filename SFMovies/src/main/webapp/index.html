@@ -1,46 +1,124 @@
 <!DOCTYPE html>
 <html>
 <head>
+<title>San Francisco Movie Map</title>
+<link rel="stylesheet" href="sfmovies.css" />
 <script
 	src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
+<script type="text/javascript"
+	src="http://google-maps-utility-library-v3.googlecode.com/svn/trunk/markerclusterer/src/markerclusterer.js"></script>
 <script>
-	$(document).ready(function()
+	var center = new google.maps.LatLng(37.7671599, -122.3970637);
+    var movieMap = null;
+    var movies = null;
+    var markerClusterer = null;
+    var movieMarkerIcon =
+    {
+        url : 'images/movieMarker.png',
+        size : new google.maps.Size(48, 48),
+        origin : new google.maps.Point(0, 0),
+        anchor : new google.maps.Point(0, 48)
+    };
+    
+    function initialize()
+    {
+	    movieMap = new google.maps.Map(document.getElementById('map'),
+	    {
+	        zoom : 12,
+	        center : center,
+	        mapTypeId : google.maps.MapTypeId.ROADMAP
+	    });
+    }
+
+    function showMarkers(query)
     {
 	    $.ajax(
 	    {
 	        type : "GET",
 	        dataType : "json",
-	        url : "/movies/director/Charles%20Chaplin",
+	        url : "/movies/" + query,
 	        success : function(result)
 	        {
 		        if (result.success)
 		        {
-			        if (result.data.length === 0)
+			        if (markerClusterer != null)
+			        {
+				        markerClusterer.clearMarkers();
+			        }
+			        movies = result.data;
+			        if (movies.length === 0)
 			        {
 				        alert('No results');
+				        showAllMarkers();
 				        return;
 			        }
 			        else
 			        {
-				        alert(result.data[0].distributor);
-				        $('body').html(JSON.stringify(result.data));
+				        console.log(movies.length + ' results');
+				        var markers = [];
+				        var infowindow = new google.maps.InfoWindow();
+				        for (var i = 0; i < movies.length; i++)
+				        {
+					        var movie = movies[i];
+					        var location = movie.location;
+					        if (location == null)
+					        {
+						        console.log('The movie "' + movie.title + '" does not have a known address.');
+						        continue;
+					        }
+					        var latLng = new google.maps.LatLng(location.lat, location.lng);
+					        var marker = new google.maps.Marker(
+					        {
+					            position : latLng,
+					            title : location.fullAddress,
+					            icon : movieMarkerIcon,
+					            info : i
+					        });
+					        markers.push(marker);
+					        
+					        google.maps.event.addListener(marker, 'click', function()
+					        {
+						        var index = this.info;
+						        var movie = movies[index];
+						        var content = '<b>' + movie.title + ' (<a href="#" onclick="showMarkers(\'releaseYear/' + movie.release_year + '\')">'
+						                + movie.release_year + '</a>)</b><br>';
+						        content += 'Director: <a href="#" onclick="showMarkers(\'director/' + movie.director + '\')">' + movie.director + '</a><br>';
+						        content += 'Distributor: <a href="#" onclick="showMarkers(\'distributor/' + movie.distributor + '\')">' + movie.distributor
+						                + '</a><br>';
+						        content += 'Writer: <a href="#" onclick="showMarkers(\'writer/' + movie.writer + '\')">' + movie.writer + '</a><br>';
+						        content += 'Address: ' + movie.location.fullAddress;
+						        infowindow.setContent(content);
+						        infowindow.open(movieMap, this);
+					        });
+					        console.log('Added marker at ' + latLng);
+				        }
+				        markerClusterer = new MarkerClusterer(movieMap, markers);
 			        }
 		        }
 		        else
 		        {
-			        alert('fail');
-			        alert(JSON.stringify(result.errorMessage));
+			        console.error('Fail: ' + JSON.stringify(result.errorMessage));
 		        }
 	        },
 	        error : function(request, status, error)
 	        {
-		        alert('Generic Error\n\n' + JSON.stringify(request));
+		        console.error('Generic Error\n\n' + JSON.stringify(request));
 	        }
 	    });
-    });
+    }
+
+    function showAllMarkers()
+    {
+	    showMarkers('all');
+    }
+
+    google.maps.event.addDomListener(window, "load", initialize);
+    setTimeout(showAllMarkers, 5000);
 </script>
 </head>
 <body>
+	<div id="map"></div>
 </body>
 </html>
 
