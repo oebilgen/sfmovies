@@ -1,0 +1,109 @@
+body {
+	font-family: Arial;
+	font-size: 16px;
+	background-image: url('http://cdn.sfmovies.org/images/background.jpg');
+	-webkit-background-size: 100% 100%;
+	-moz-background-size: 100% 100%;
+	-o-background-size: 100% 100%;
+	background-size: 100% 100%;
+	background-repeat: no-repeat;
+	background-color: #000000;
+}
+
+html, body {
+	height: 100%;
+	margin: 0px;
+	padding: 0px;
+	overflow: hidden;
+}
+
+#page {
+	height: 100%;
+	width: 100%;
+	position: relative;
+	margin: 40px 50px 0px 50px;
+}
+
+#header {
+	background-color: yellow;
+	width: 90%;
+	height: 50px;
+	overflow: hidden;
+	position: relative;
+	margin: 50px auto 0px auto;
+}
+
+#query {
+	width: 100%;
+	height: 47px;
+	font-size: 24px;
+	text-indent: 13px;
+}
+
+#map {
+	width: 90%;
+	height: 450px;
+	overflow: hidden;
+	position: fixed;
+	margin: 0px auto 0px auto;
+}
+
+.autocomplete {
+	border: 1px solid #999;
+	background: #FFFFFF;
+	cursor: default;
+	text-align: left;
+	max-height: 350px;
+	overflow: auto;
+	margin: -6px 6px 6px -6px; /* IE6 specific: */
+	_height: 350px;
+	_margin: 0;
+	_overflow-x: hidden;
+}
+
+.autocomplete-w1 {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	margin: 6px 0 0 6px; /* IE6 fix: */
+	_background: none;
+	_margin: 1px 0 0 0;
+	position: absolute;
+}
+
+.autocomplete .selected {
+	background: #F0F0F0;
+}
+
+.autocomplete div {
+	padding: 2px 5px;
+	white-space: nowrap;
+	overflow: hidden;
+}
+
+.autocomplete strong {
+	font-weight: normal;
+	color: #3399FF;
+}
+
+.autocomplete-suggestion {
+	background-color: #FFFFFF;
+	padding: 5px;
+}
+
+.autocomplete-suggestion:hover {
+	background-color: #dddddd;
+	cursor: pointer;
+	cursor: hand;
+}
+
+span.movieTitle
+{
+	font-weight:bold;
+	line-height: 2em;
+}
+
+a { text-decoration: none; color: #880902; }
+a:VISITED { text-decoration: none; color: #880902; }
+a:HOVER { text-decoration: underline; color: #880902; }
+a:ACTIVE { text-decoration: underline; color: #880902; }
