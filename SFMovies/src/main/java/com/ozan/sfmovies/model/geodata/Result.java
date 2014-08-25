@@ -1,4 +1,4 @@
-package com.ozan.sfmovies.geodata;
+package com.ozan.sfmovies.model.geodata;
 
 import java.io.Serializable;
 

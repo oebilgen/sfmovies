@@ -1,10 +1,8 @@
-package com.ozan.sfmovies.controller;
+package com.ozan.sfmovies.frontend;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.ozan.sfmovies.model.Cache;
 import com.ozan.sfmovies.model.Movie;
 import com.ozan.sfmovies.model.Response;
 import com.ozan.sfmovies.model.SearchResultCollection;
@@ -25,7 +22,6 @@ import com.ozan.sfmovies.model.SearchResultCollection;
 @RequestMapping("/")
 public class JSONController
 {
-	private static Logger logger = LoggerFactory.getLogger(JSONController.class);
 	@Autowired
 	private Cache cache;
 

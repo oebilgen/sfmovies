@@ -1,4 +1,4 @@
-package com.ozan.sfmovies.model;
+package com.ozan.sfmovies.frontend;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -21,6 +21,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.ozan.sfmovies.geodata.AddressConverter;
+import com.ozan.sfmovies.model.DataType;
+import com.ozan.sfmovies.model.Location;
+import com.ozan.sfmovies.model.Movie;
+import com.ozan.sfmovies.model.SearchResult;
+import com.ozan.sfmovies.model.SearchResultCollection;
 
 public class Cache
 {

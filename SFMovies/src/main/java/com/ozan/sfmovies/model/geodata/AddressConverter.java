@@ -1,7 +1,7 @@
 /**
  * Based on the work of @author Abhishek Somani
  */
-package com.ozan.sfmovies.geodata;
+package com.ozan.sfmovies.model.geodata;
 
 import java.io.IOException;
 import java.io.InputStream;
