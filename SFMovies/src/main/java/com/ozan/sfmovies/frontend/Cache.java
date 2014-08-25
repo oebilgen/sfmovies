@@ -20,12 +20,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.ozan.sfmovies.geodata.AddressConverter;
 import com.ozan.sfmovies.model.DataType;
 import com.ozan.sfmovies.model.Location;
 import com.ozan.sfmovies.model.Movie;
 import com.ozan.sfmovies.model.SearchResult;
 import com.ozan.sfmovies.model.SearchResultCollection;
+import com.ozan.sfmovies.model.geodata.AddressConverter;
 
 public class Cache
 {
@@ -54,8 +54,8 @@ public class Cache
 			final ObjectMapper mapper = new ObjectMapper();
 			logger.debug("Reading data...");
 			movies = mapper.readValue(reader, new TypeReference<List<Movie>>()
-					{
-					});
+			{
+			});
 			logger.debug("CDN data read.");
 		}
 		catch (final IOException e)
