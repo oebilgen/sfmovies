@@ -1,14 +1,13 @@
-package com.ozan.sfmovies.model;
+package com.ozan.sfmovies.model.geodata;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 
-public class Location
+public class Coordinates
 {
 	@JsonProperty("lat")
 	private Double latitude;
 	@JsonProperty("lng")
 	private Double longitude;
-	private String fullAddress;
 
 	public Double getLatitude()
 	{
@@ -30,20 +29,10 @@ public class Location
 		this.longitude = longitude;
 	}
 
-	public String getFullAddress()
-	{
-		return this.fullAddress;
-	}
-
-	public void setFullAddress(final String fullAddress)
-	{
-		this.fullAddress = fullAddress;
-	}
-
 	@Override
 	public String toString()
 	{
-		return "Coordinates [latitude=" + this.latitude + ", longitude=" + this.longitude + ", fullAddress=" + this.fullAddress + "]";
+		return "Coordinates [latitude=" + this.latitude + ", longitude=" + this.longitude + "]";
 	}
 
 	@Override
@@ -51,7 +40,6 @@ public class Location
 	{
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + (this.fullAddress == null ? 0 : this.fullAddress.hashCode());
 		result = prime * result + (this.latitude == null ? 0 : this.latitude.hashCode());
 		result = prime * result + (this.longitude == null ? 0 : this.longitude.hashCode());
 		return result;
@@ -72,18 +60,7 @@ public class Location
 		{
 			return false;
 		}
-		final Location other = (Location) obj;
-		if (this.fullAddress == null)
-		{
-			if (other.fullAddress != null)
-			{
-				return false;
-			}
-		}
-		else if (!this.fullAddress.equals(other.fullAddress))
-		{
-			return false;
-		}
+		final Coordinates other = (Coordinates) obj;
 		if (this.latitude == null)
 		{
 			if (other.latitude != null)

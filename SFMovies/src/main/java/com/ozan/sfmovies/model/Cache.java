@@ -1,4 +1,4 @@
-package com.ozan.sfmovies.frontend;
+package com.ozan.sfmovies.model;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 
@@ -20,11 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.ozan.sfmovies.model.DataType;
-import com.ozan.sfmovies.model.Location;
-import com.ozan.sfmovies.model.Movie;
-import com.ozan.sfmovies.model.SearchResult;
-import com.ozan.sfmovies.model.SearchResultCollection;
 import com.ozan.sfmovies.model.geodata.AddressConverter;
 
 public class Cache
@@ -33,40 +29,72 @@ public class Cache
 	private final List<Movie> movies = new ArrayList<Movie>();
 	@Autowired
 	private AddressConverter addressConverter;
-	private URL cdnDataFile;
+	private URL cdnFormattedDataFile;
+	private URL cdnRawDataFile;
 
 	@PostConstruct
-	public void init()
+	public void initializeCache()
 	{
-		this.loadCdnData();
+		this.loadFormattedCdnData();
 	}
 
-	public void loadCdnData()
+	public void loadFormattedCdnData()
 	{
 		final ArrayList<Movie> movies;
 		try
 		{
-			logger.debug("Opening connection to CDN data file [" + this.cdnDataFile + "]...");
-			final URLConnection urlConnection = this.cdnDataFile.openConnection();
-			logger.debug("Connection established.");
-			final InputStream inputStream = urlConnection.getInputStream();
-			final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+			final BufferedReader reader = this.getCdnInputStream(this.cdnFormattedDataFile);
 			final ObjectMapper mapper = new ObjectMapper();
 			logger.debug("Reading data...");
 			movies = mapper.readValue(reader, new TypeReference<List<Movie>>()
-			{
-			});
-			logger.debug("CDN data read.");
+					{
+					});
+			logger.debug("CDN formatted data read.");
 		}
 		catch (final IOException e)
 		{
-			logger.error("Unable to read movie data.", e);
+			logger.error("Unable to read formatted movie data.", e);
 			return;
 		}
 		for (final Movie newMovie : movies)
 		{
-			this.addMovie(newMovie, false);
+			newMovie.getMovieLocations().remove(null);
+			this.addMovie(newMovie);
 		}
+	}
+
+	public void loadRawData()
+	{
+		final ArrayList<RawMovieData> newRawMovies;
+		try
+		{
+			final BufferedReader reader = this.getCdnInputStream(this.cdnRawDataFile);
+			final ObjectMapper mapper = new ObjectMapper();
+			logger.debug("Reading raw data...");
+			newRawMovies = mapper.readValue(reader, new TypeReference<List<RawMovieData>>()
+					{
+					});
+			logger.debug("CDN raw data read.");
+		}
+		catch (final IOException e)
+		{
+			logger.error("Unable to read raw movie data.", e);
+			return;
+		}
+		for (final RawMovieData newRawMovie : newRawMovies)
+		{
+			this.addRawMovieData(newRawMovie);
+		}
+	}
+
+	private BufferedReader getCdnInputStream(final URL cdnDataFile) throws IOException
+	{
+		logger.debug("Opening connection to CDN data file [" + cdnDataFile + "]...");
+		final URLConnection urlConnection = cdnDataFile.openConnection();
+		logger.debug("Connection established.");
+		final InputStream inputStream = urlConnection.getInputStream();
+		final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+		return reader;
 	}
 
 	public List<Movie> getAllMovies()
@@ -100,27 +128,15 @@ public class Cache
 		final List<Movie> result = new ArrayList<Movie>();
 		for (final Movie movie : this.movies)
 		{
-			if (this.actor1Match(actor, movie) || this.actor2Match(actor, movie) || this.actor3Match(actor, movie))
+			for (final String knownActor : movie.getActors())
 			{
-				result.add(movie);
+				if (this.stringMatch(knownActor, actor))
+				{
+					result.add(movie);
+				}
 			}
 		}
 		return result;
-	}
-
-	private boolean actor1Match(final String actor, final Movie movie)
-	{
-		return this.stringMatch(movie.getActor1(), actor);
-	}
-
-	private boolean actor2Match(final String actor, final Movie movie)
-	{
-		return this.stringMatch(movie.getActor2(), actor);
-	}
-
-	private boolean actor3Match(final String actor, final Movie movie)
-	{
-		return this.stringMatch(movie.getActor3(), actor);
 	}
 
 	public List<Movie> getMoviesByDirector(final String director)
@@ -233,46 +249,99 @@ public class Cache
 		return this.stringMatch(movie.getWriter(), writer);
 	}
 
-	public void addMovie(final Movie newMovie, final boolean doAddressResolution)
+	public List<Movie> getMoviesById(final UUID movieId)
 	{
-		if (newMovie == null)
+		if (movieId == null)
 		{
-			return;
+			return null;
 		}
-		if (this.movies.contains(newMovie))
+		final List<Movie> result = new ArrayList<Movie>();
+		for (final Movie movie : this.movies)
 		{
-			return;
-		}
-		if (doAddressResolution && newMovie.getLocation() == null)
-		{
-			for (int i = 0; i < 3; i++)
+			if (movie.getId().equals(movieId))
 			{
-				final Location coordinates = this.addressConverter.convertAddressToLocation(newMovie.getLocations() + ", San Francisco, CA, USA");
+				result.add(movie);
+			}
+		}
+		return result;
+	}
 
-				try
-				{
-					// Avoid Google Maps API rate limit
-					Thread.sleep(100);
-				}
-				catch (final InterruptedException e)
-				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+	private MovieLocation queryLocation(final String rawAddress)
+	{
+		if (rawAddress == null)
+		{
+			return null;
+		}
+		for (int i = 0; i < 3; i++)
+		{
+			final MovieLocation movieLocation = this.addressConverter.convertAddressToMovieLocation(rawAddress + ", San Francisco, CA, USA");
 
-				if (coordinates == null)
+			try
+			{
+				// Avoid Google Maps API rate limit
+				Thread.sleep(100);
+			}
+			catch (final InterruptedException e)
+			{
+				e.printStackTrace();
+			}
+
+			if (movieLocation == null)
+			{
+				logger.debug("No movie location found...");
+			}
+			else
+			{
+				logger.debug("Movie location found: " + movieLocation);
+				return movieLocation;
+			}
+		}
+
+		return null;
+	}
+
+	public void addMovie(final Movie newMovie)
+	{
+		if (!this.movies.contains(newMovie))
+		{
+			this.movies.add(newMovie);
+		}
+	}
+
+	public void addRawMovieData(final RawMovieData newRawMovie)
+	{
+		if (newRawMovie == null)
+		{
+			return;
+		}
+		for (final Movie existingMovie : this.movies)
+		{
+			if (existingMovie.equals(newRawMovie))
+			{
+				final MovieLocation newMovieLocation = this.queryLocation(newRawMovie.getLocations());
+				// We have an existing movie. We should check if that object has
+				// the location, otherwise add it to the array.
+				if (existingMovie.getMovieLocations().contains(newMovieLocation))
 				{
-					logger.debug("No coordinates found...");
+					logger.debug("Location [" + newMovieLocation + "] exists in Movie [" + existingMovie.getTitle() + "] does contain this location.");
+					return;
 				}
 				else
 				{
-					newMovie.setLocation(coordinates);
-					logger.debug("Coordinates found: " + coordinates);
-					break;
+					logger.debug("Movie [" + existingMovie.getTitle() + "] does not contain the location [" + newMovieLocation + "], adding...");
+					existingMovie.getMovieLocations().add(newMovieLocation);
+					return;
 				}
 			}
 		}
-		// logger.debug("New movie: " + newMovie.toString());
+		logger.debug("Movie [" + newRawMovie.getTitle() + "] is new.");
+		final Movie newMovie = new Movie(newRawMovie);
+		final MovieLocation newMovieLocation = this.queryLocation(newRawMovie.getLocations());
+		if (newMovieLocation != null)
+		{
+			newMovie.addMovieLocation(newMovieLocation);
+		}
+		logger.debug("New movie: " + newMovie.toString());
 		this.movies.add(newMovie);
 	}
 
@@ -291,42 +360,34 @@ public class Cache
 		final Set<SearchResult> searchResult = new HashSet<>();
 		for (final Movie movie : this.movies)
 		{
-			if (this.actor1Match(query, movie))
+			for (final String knownActor : movie.getActors())
 			{
-				final String actor1 = movie.getActor1();
-				searchResult.add(new SearchResult(actor1, DataType.ACTOR));
+				if (this.stringMatch(knownActor, query))
+				{
+					searchResult.add(new SearchResult(knownActor, DataType.ACTOR));
+				}
 			}
-			else if (this.actor2Match(query, movie))
-			{
-				final String actor2 = movie.getActor2();
-				searchResult.add(new SearchResult(actor2, DataType.ACTOR));
-			}
-			else if (this.actor3Match(query, movie))
-			{
-				final String actor3 = movie.getActor3();
-				searchResult.add(new SearchResult(actor3, DataType.ACTOR));
-			}
-			else if (this.directorMatch(query, movie))
+			if (this.directorMatch(query, movie))
 			{
 				final String director = movie.getDirector();
 				searchResult.add(new SearchResult(director, DataType.DIRECTOR));
 			}
-			else if (this.distributorMatch(query, movie))
+			if (this.distributorMatch(query, movie))
 			{
 				final String distributor = movie.getDistributor();
 				searchResult.add(new SearchResult(distributor, DataType.DISTRIBUTOR));
 			}
-			else if (this.productionCompanyMatch(query, movie))
+			if (this.productionCompanyMatch(query, movie))
 			{
 				final String productionCompany = movie.getProductionCompany();
 				searchResult.add(new SearchResult(productionCompany, DataType.PRODUCTION_COMPANY));
 			}
-			else if (this.titleMatch(query, movie))
+			if (this.titleMatch(query, movie))
 			{
 				final String title = movie.getTitle();
 				searchResult.add(new SearchResult(title, DataType.TITLE));
 			}
-			else if (this.writerMatch(query, movie))
+			if (this.writerMatch(query, movie))
 			{
 				final String writer = movie.getWriter();
 				searchResult.add(new SearchResult(writer, DataType.WRITER));
@@ -352,11 +413,20 @@ public class Cache
 	}
 
 	/**
-	 * @param cdnDataFile
-	 *            the cdnDataFile to set
+	 * @param cdnFormattedDataFile
+	 *            the cdnFormattedDataFile to set
 	 */
-	public void setCdnDataFile(final URL cdnDataFile)
+	public void setCdnFormattedDataFile(final URL cdnFormattedDataFile)
 	{
-		this.cdnDataFile = cdnDataFile;
+		this.cdnFormattedDataFile = cdnFormattedDataFile;
+	}
+
+	/**
+	 * @param cdnRawDataFile
+	 *            the cdnRawDataFile to set
+	 */
+	public void setCdnRawDataFile(final URL cdnRawDataFile)
+	{
+		this.cdnRawDataFile = cdnRawDataFile;
 	}
 }

@@ -2,6 +2,7 @@ package com.ozan.sfmovies.frontend;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -14,7 +15,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.ozan.sfmovies.model.Cache;
 import com.ozan.sfmovies.model.Movie;
+import com.ozan.sfmovies.model.RawMovieData;
 import com.ozan.sfmovies.model.Response;
 import com.ozan.sfmovies.model.SearchResultCollection;
 
@@ -29,7 +32,7 @@ public class JSONController
 	@ResponseBody
 	public void newMovie(@RequestBody final Movie newMovie)
 	{
-		this.cache.addMovie(newMovie, true);
+		this.cache.addMovie(newMovie);
 	}
 
 	@RequestMapping(value = "newMovies", method = RequestMethod.POST, consumes = "application/json")
@@ -38,7 +41,24 @@ public class JSONController
 	{
 		for (final Movie newMovie : newMovies)
 		{
-			this.cache.addMovie(newMovie, true);
+			this.cache.addMovie(newMovie);
+		}
+	}
+
+	@RequestMapping(value = "newRawMovie", method = RequestMethod.POST, consumes = "application/json")
+	@ResponseBody
+	public void newRawMovie(@RequestBody final RawMovieData newRawMovie)
+	{
+		this.cache.addRawMovieData(newRawMovie);
+	}
+
+	@RequestMapping(value = "newRawMovies", method = RequestMethod.POST, consumes = "application/json")
+	@ResponseBody
+	public void newRawMovies(@RequestBody final ArrayList<RawMovieData> newRawMovies)
+	{
+		for (final RawMovieData newRawMovie : newRawMovies)
+		{
+			this.cache.addRawMovieData(newRawMovie);
 		}
 	}
 
@@ -54,7 +74,7 @@ public class JSONController
 	public ResponseEntity<Response> loadCdnData()
 	{
 		this.cache.clear();
-		this.cache.loadCdnData();
+		this.cache.loadFormattedCdnData();
 		return new ResponseEntity<Response>(new Response(this.cache.getAllMovies()), HttpStatus.OK);
 	}
 
@@ -63,6 +83,18 @@ public class JSONController
 	public ResponseEntity<Response> noFilter()
 	{
 		final List<Movie> movies = this.cache.getAllMovies();
+		return new ResponseEntity<Response>(new Response(movies), HttpStatus.OK);
+	}
+
+	@RequestMapping(value = "movieId/{movieId}", method = RequestMethod.GET, produces = "application/json")
+	@ResponseBody
+	public ResponseEntity<Response> movieId(@PathVariable("movieId") final UUID movieId)
+	{
+		if (movieId == null)
+		{
+			return new ResponseEntity<Response>(new Response("Missing parameter: movieId"), HttpStatus.BAD_REQUEST);
+		}
+		final List<Movie> movies = this.cache.getMoviesById(movieId);
 		return new ResponseEntity<Response>(new Response(movies), HttpStatus.OK);
 	}
 

@@ -13,7 +13,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ozan.sfmovies.model.Location;
+import com.ozan.sfmovies.model.MovieLocation;
 
 public class AddressConverter
 {
@@ -22,7 +22,7 @@ public class AddressConverter
 	private static final String sensorSetting = "&sensor=false";
 	private static final String encoding = "UTF-8";
 
-	public Location convertAddressToLocation(final String address)
+	public MovieLocation convertAddressToMovieLocation(final String address)
 	{
 		final GoogleResponse googleResponse;
 
@@ -66,22 +66,19 @@ public class AddressConverter
 			logger.error("Cannot determine the geometry for address [" + address + "]");
 			return null;
 		}
-		final Location location = geometry.getLocation();
-		if (location == null)
+		final Coordinates coordinates = geometry.getLocation();
+		if (coordinates == null)
 		{
-			logger.error("Cannot determine the location for address [" + address + "]");
+			logger.error("Cannot determine the coordinates for address [" + address + "]");
 			return null;
 		}
-		final String formattedAddress = results[0].getFormattedAddress();
+		String formattedAddress = results[0].getFormattedAddress();
 		if (formattedAddress == null)
 		{
-			location.setFullAddress(address);
+			formattedAddress = address;
 		}
-		else
-		{
-			location.setFullAddress(formattedAddress);
-		}
-		return location;
+
+		return new MovieLocation(coordinates.getLatitude(), coordinates.getLongitude(), formattedAddress);
 	}
 
 	public GoogleResponse convertLocationToAddress(final String latlongString) throws IOException

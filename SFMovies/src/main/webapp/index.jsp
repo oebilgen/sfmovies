@@ -1,13 +1,25 @@
 <%
 	String cdnHost = "http://cdn.sfmovies.org/";
+	String metaTitle = "San Francisco Movies Map";
+	String metaDescription = "A website about the movies that were filmed in San Francisco...";
+	String myFacebookPage = "http://www.facebook.com/oebilgen";
 %>
 <!DOCTYPE html>
 <html>
 <head>
-<title>San Francisco Movie Map</title>
+<title><%= metaTitle %></title>
+<meta property="og:title" content="<%= metaTitle %>"/>
+<meta name="description" content="<%= metaDescription %>">
+<meta property="og:description" content="<%= metaDescription %>"/>
+<meta property="og:image" content="http://davidwalsh.name/wp-content/themes/klass/img/facebooklogo.png"/>
+<meta property="og:url" content="http://www.sfmovies.org" />
+<meta property="article:publisher" content="<%= myFacebookPage %>" />
+<meta property="article:author" content="<%= myFacebookPage %>" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
 <link rel="icon" href="/favicon.ico" type="image/x-icon">
 <link rel="stylesheet" href="<%=cdnHost%>css/sfmovies.css" />
+<link rel="stylesheet" href="<%=cdnHost%>css/sfmoviesMobile.css" media="only screen and (max-device-width:480px)"/>
 <script src="<%=cdnHost%>js/jquery.min.js"></script>
 <script src="<%=cdnHost%>js/googlemaps.js"></script>
 <script type="text/javascript" src="<%=cdnHost%>js/markerclusterer.js"></script>
@@ -95,10 +107,10 @@
 				                description = 'distributor';
 				                break;
 			                case 'PRODUCTION_COMPANY':
-				                description = 'productionCompany';
+				                description = 'production company';
 				                break;
 			                case 'RELEASE_YEAR':
-				                description = 'releaseYear';
+				                description = 'release year';
 				                break;
 			                case 'TITLE':
 				                description = 'title';
@@ -143,9 +155,12 @@
 	        {
 		        if (result.success)
 		        {
-			        if (markerCluster != null)
+			        if (type != 'all')
 			        {
-				        markerCluster.clearMarkers();
+			        	if (markerCluster != null)
+			        	{
+				        	markerCluster.clearMarkers();
+			        	}
 				        map.setZoom(searchZoom);
 				        map.setCenter(searchCenter);
 			        }
@@ -161,7 +176,6 @@
 				        console.log(movies.length + ' results');
 				        infoWindow = new google.maps.InfoWindow(
 				        {
-					        maxWidth : 400
 				        });
 				        var overlappingMarkerSpiderfier = new OverlappingMarkerSpiderfier(map,
 				        {
@@ -171,7 +185,7 @@
 				        });
 				        overlappingMarkerSpiderfier.addListener('click', function(marker)
 				        {
-					        infoWindow.setContent(marker.desc);
+					        infoWindow.setContent(createDescription(marker.movieId, marker.locationId));
 					        infoWindow.open(map, marker);
 				        });
 				        overlappingMarkerSpiderfier.addListener('spiderfy', function(markers)
@@ -191,28 +205,46 @@
 				        });
 				        var bounds = new google.maps.LatLngBounds();
 				        var markers = [];
-				        for (var i = 0; i < movies.length; i++)
+				        var i;
+				        for (i = 0; i < movies.length; i++)
 				        {
 					        var movie = movies[i];
-					        var location = movie.location;
-					        if (location == null)
+					        if (type == 'movieId')
+					        {
+					        	$('#query').val(movie.title);
+					        }
+					        var movieLocations = movie.movieLocations;
+					        if (movieLocations == null || movieLocations.length == 0)
 					        {
 						        console.error('The movie "' + movie.title + '" does not have a known address, skipping...');
 						        continue;
 					        }
-					        var latLng = new google.maps.LatLng(location.lat, location.lng);
-					        bounds.extend(latLng);
-					        var marker = new google.maps.Marker(
+					        for (var j = 0; j < movieLocations.length; j++)
 					        {
-					            position : latLng,
-					            title : movie.title,
-					            icon : usualIcon,
-					            info : i
-					        });
-					        marker.desc = createDescription(movie);
-					        overlappingMarkerSpiderfier.addMarker(marker);
-					        markers.push(marker);
-					        console.log('Added marker at ' + latLng);
+					        	movieLocation = movieLocations[j];
+					        	if (movieLocation == null)
+					        	{
+					        		console.error("DATA ERROR: title:" + movie.title + " movieLocation:%o", movieLocation);
+					        		continue;
+					        	}
+					        	var latLng = new google.maps.LatLng(movieLocation.latitude, movieLocation.longitude);
+						        bounds.extend(latLng);
+						        var marker = new google.maps.Marker(
+						        {
+						            position : latLng,
+						            title : movie.title,
+						            icon : usualIcon,
+						            movieId : i,
+						            locationId : j
+						        });
+						        overlappingMarkerSpiderfier.addMarker(marker);
+						        markers.push(marker);
+						        console.log('Added marker at ' + latLng);
+					        }
+				        }
+				        if (i == 0 && type == 'movieId')
+				        {
+				        	$('#query').val('');
 				        }
 				        markerCluster = new MarkerClusterer(map, markers);
 				        markerCluster.setMaxZoom(14);
@@ -223,46 +255,58 @@
 			        console.error('Fail: ' + JSON.stringify(result.errorMessage));
 		        }
 	        },
-	        error : function(request, status, error)
-	        {
-		        console.error('Generic Error\n\n' + JSON.stringify(request));
-	        }
+	        error: function( jqXHR, textStatus, errorThrown ) {
+	        	alert('ERRORR!!!');
+                console.log('textStatus: ' + textStatus );
+                console.log('errorThrown: ' + errorThrown );
+                console.log('jqXHR' + jqXHR);
+            }
+	        
 	    });
     }
-    
-    function createDescription(movie)
+
+    function createDescription(movieId, locationId)
     {
-	    var description = '<span class="movieTitle">' + movie.title + ' (<a href="#" class="releaseYear" onclick="showMarkers(\'releaseYear\', \'' + encodeURIComponent(movie.release_year) + '\')">'
-	            + movie.release_year + '</a>)</span><br>';
-	    description += 'Director: <a href="#" class="director" onclick="showMarkers(\'director\', \'' + encodeURIComponent(movie.director) + '\')">' + movie.director
-	            + '</a><br>';
+    	var movie = movies[movieId];
+	    var description = '<div class="infoWindow"><span class="movieTitle">' + movie.title + ' (<a href="#" class="releaseYear" onclick="showMarkers(\'releaseYear\', \''
+	            + encodeURIComponent(movie.releaseYear) + '\')">' + movie.releaseYear + '</a>)</span><br>';
+	    description += 'Director: <a href="#" class="director" onclick="showMarkers(\'director\', \'' + encodeURIComponent(movie.director) + '\')">'
+	            + movie.director + '</a><br>';
 	    var actors = [];
-	    if (typeof movie.actor_1 != 'undefined')
+	    for (var i = 0; i < movie.actors.length; i++)
 	    {
-	    	actors.push('<a href="#" class="actor" onclick="showMarkers(\'actor\', \'' + encodeURIComponent(movie.actor_1) + '\')">' + movie.actor_1 + '</a>');
-	    }
-	    if (typeof movie.actor_2 != 'undefined')
-	    {
-	    	actors.push('<a href="#" class="actor" onclick="showMarkers(\'actor\', \'' + encodeURIComponent(movie.actor_2) + '\')">' + movie.actor_2 + '</a>');
-	    }
-	    if (typeof movie.actor_3 != 'undefined')
-	    {
-	    	actors.push('<a href="#" class="actor" onclick="showMarkers(\'actor\', \'' + encodeURIComponent(movie.actor_3) + '\')">' + movie.actor_3 + '</a>');
+	    	actors.push('<a href="#" class="actor" onclick="showMarkers(\'actor\', \'' + encodeURIComponent(movie.actors[i]) + '\')">' + movie.actors[i] + '</a>');
 	    }
 	    description += 'Actors: ' + actors.join(', ') + '<br>';
-	    description += 'Production Company: <a href="#" class="productionCompany" onclick="showMarkers(\'productionCompany\', \'' + encodeURIComponent(movie.production_company) + '\')">'
-        + movie.production_company + '</a><br>';
-	    description += 'Distributor: <a href="#" class="distributor" onclick="showMarkers(\'distributor\', \'' + encodeURIComponent(movie.distributor) + '\')">'
-	            + movie.distributor + '</a><br>';
-	    description += 'Writer: <a href="#" class="writer" onclick="showMarkers(\'writer\', \'' + encodeURIComponent(movie.writer) + '\')">' + movie.writer + '</a><br>';
-	    var fullAddress = movie.location.fullAddress;
-	    description += 'Address: <a href="https://www.google.com/maps/?q=' + encodeURIComponent(fullAddress) + '" class="address" target="_blank">' + fullAddress + '</a>';
+	    description += 'Production Company: <a href="#" class="productionCompany" onclick="showMarkers(\'productionCompany\', \''
+	            + encodeURIComponent(movie.productionCompany) + '\')">' + movie.productionCompany + '</a><br>';
+	    description += 'Distributor: <a href="#" class="distributor" onclick="showMarkers(\'distributor\', \'' + encodeURIComponent(movie.distributor)
+	            + '\')">' + movie.distributor + '</a><br>';
+	    description += 'Writer: <a href="#" class="writer" onclick="showMarkers(\'writer\', \'' + encodeURIComponent(movie.writer) + '\')">' + movie.writer
+	            + '</a><br>';
+	    var formattedAddress = movie.movieLocations[locationId].formattedAddress;
+	    description += 'Address: <a href="https://www.google.com/maps/?q=' + encodeURIComponent(formattedAddress) + '" class="address" target="_blank">'
+	            + formattedAddress + '</a><br>';
+	    description += '<input type="button" onclick="window.open(\'http://google.com/search?q=' + encodeURIComponent(movie.title + ' watch online') + '\');" value="Watch online"> ';
+	    description += '<input type="button" onclick="window.open(\'https://www.uber.com/invite/uberoebilgen\');" value="Request Uber"> ';
+	    description += '<input type="button" onclick="window.open(\'/?movieId=' + movie.id + '\');" value="Link"> ';
+	    description += '</div>';
 	    return description;
     }
-
+    
     function showAllMarkers()
     {
-	    showMarkers('all', '');
+    	<%
+    	String movieId = request.getParameter("movieId");
+    	if (movieId == null || movieId.isEmpty())
+    	{
+    		out.print("showMarkers('all', '');");
+    	}
+    	else
+    	{
+    		out.print("showMarkers('movieId', '" + movieId + "');");
+    	}
+    	%>
     }
     google.maps.event.addDomListener(window, "load", initialize);
     setTimeout(showAllMarkers, 1000);
@@ -270,8 +314,8 @@
 </head>
 <body>
 	<div id="header">
-		<input type="text" name="q" id="query"
-			placeholder="Search in San Francisco Movies..." />
+		<input type="text" name="q" id="query" 
+			placeholder="Search for San Francisco Movies..." autofocus />
 	</div>
 	<div id="map"></div>
 </body>

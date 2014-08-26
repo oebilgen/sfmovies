@@ -1,0 +1,19 @@
+body {
+	background-image: none;
+}
+
+#header {
+	width: 100%;
+	margin: 0px auto 0px auto;
+}
+
+#map {
+	width: 100%;
+	height: 100%;
+}
+
+span.movieTitle
+{
+	line-height: 1em;
+	font-size:1.2em;
+}

@@ -17,8 +17,9 @@
 	<context:property-placeholder location="file:/etc/sfmovies/sfMovies.properties"
 		order="-1" ignore-unresolvable="true" ignore-resource-not-found="true" />
 
-	<bean id="cache" class="com.ozan.sfmovies.frontend.Cache">
-		<property name="cdnDataFile" value="${cdnDataFile}" />
+	<bean id="cache" class="com.ozan.sfmovies.model.Cache">
+		<property name="cdnRawDataFile" value="${cdnRawDataFile}" />
+		<property name="cdnFormattedDataFile" value="${cdnFormattedDataFile}" />
 	</bean>
-	<bean id="addressConverter" class="com.ozan.sfmovies.geodata.AddressConverter" />
+	<bean id="addressConverter" class="com.ozan.sfmovies.model.geodata.AddressConverter" />
 </beans>

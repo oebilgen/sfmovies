@@ -17,17 +17,9 @@ html, body {
 	overflow: hidden;
 }
 
-#page {
-	height: 100%;
-	width: 100%;
-	position: relative;
-	margin: 40px 50px 0px 50px;
-}
-
 #header {
-	background-color: yellow;
 	width: 90%;
-	height: 50px;
+	height: 48px;
 	overflow: hidden;
 	position: relative;
 	margin: 50px auto 0px auto;
@@ -38,6 +30,8 @@ html, body {
 	height: 47px;
 	font-size: 24px;
 	text-indent: 13px;
+	border: 0px;
+	outline: none;
 }
 
 #map {
@@ -48,6 +42,20 @@ html, body {
 	margin: 0px auto 0px auto;
 }
 
+div.infoWindow {
+	font-family: Arial;
+	font-size: 16px;
+	line-height:1.5em;
+	padding: 1em 1em 1.5em 1em; 
+}
+
+span.movieTitle
+{
+	font-weight:bold;
+	line-height: 3em;
+	font-size:1.5em;
+}
+
 .autocomplete {
 	border: 1px solid #999;
 	background: #FFFFFF;
@@ -55,19 +63,20 @@ html, body {
 	text-align: left;
 	max-height: 350px;
 	overflow: auto;
-	margin: -6px 6px 6px -6px; /* IE6 specific: */
-	_height: 350px;
-	_margin: 0;
-	_overflow-x: hidden;
 }
 
 .autocomplete-w1 {
 	position: absolute;
 	top: 0px;
 	left: 0px;
-	margin: 6px 0 0 6px; /* IE6 fix: */
-	_background: none;
-	_margin: 1px 0 0 0;
+	margin: -10px 0 0 0;
+	position: absolute;
+}
+
+.autocomplete-suggestions {
+	max-width:90%;
+	margin-top: -5px !important;
+	left: 0px;
 	position: absolute;
 }
 
@@ -95,12 +104,6 @@ html, body {
 	background-color: #dddddd;
 	cursor: pointer;
 	cursor: hand;
-}
-
-span.movieTitle
-{
-	font-weight:bold;
-	line-height: 2em;
 }
 
 a { text-decoration: none; color: #880902; }

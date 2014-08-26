@@ -3,15 +3,13 @@ package com.ozan.sfmovies.model.geodata;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 
-import com.ozan.sfmovies.model.Location;
-
 /**
  * @author Abhishek Somani
  */
 public class Geometry
 {
 
-	private Location location;
+	private Coordinates location;
 
 	@JsonProperty("location_type")
 	private String locationType;
@@ -22,12 +20,12 @@ public class Geometry
 	@JsonIgnore
 	private Object viewport;
 
-	public Location getLocation()
+	public Coordinates getLocation()
 	{
 		return this.location;
 	}
 
-	public void setLocation(final Location location)
+	public void setLocation(final Coordinates location)
 	{
 		this.location = location;
 	}
