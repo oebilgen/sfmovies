@@ -22,8 +22,21 @@
 <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
 <link rel="icon" href="/favicon.ico" type="image/x-icon">
 <link rel="stylesheet" href="<%=cdnHost%>css/sfmovies.css" />
-<link rel="stylesheet" href="<%=cdnHost%>css/sfmoviesMobile.css"
-	media="only screen and (max-device-width:480px)" />
+<link rel="stylesheet" href="<%=cdnHost%>css/sfmoviesMobile.css" />
+<style>
+
+#header {
+	width: 100%;
+	height: 50px;
+	margin: 0px auto 0px auto;
+}
+
+#query {
+	height: 49px;
+	font-size: 24px;
+	text-indent: 12px;
+}
+</style>
 <script src="<%=cdnHost%>js/jquery.min.js"></script>
 <script src="<%=cdnHost%>js/googlemaps.js"></script>
 <script type="text/javascript" src="<%=cdnHost%>js/markerclusterer.js"></script>

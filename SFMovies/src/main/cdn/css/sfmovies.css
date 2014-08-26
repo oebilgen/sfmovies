@@ -45,15 +45,18 @@ html, body {
 div.infoWindow {
 	font-family: Arial;
 	font-size: 16px;
-	line-height:1.5em;
-	padding: 1em 1em 1.5em 1em; 
+	line-height: 1.5em;
+	padding: 1em 1em 1.5em 1em;
 }
 
-span.movieTitle
-{
-	font-weight:bold;
+span.movieTitle {
+	font-weight: bold;
 	line-height: 3em;
-	font-size:1.5em;
+	font-size: 1.5em;
+}
+
+div.shareButtons {
+	margin-top: 0.5em;
 }
 
 .autocomplete {
@@ -74,7 +77,7 @@ span.movieTitle
 }
 
 .autocomplete-suggestions {
-	max-width:90%;
+	max-width: 90%;
 	margin-top: -5px !important;
 	left: 0px;
 	position: absolute;
@@ -106,7 +109,22 @@ span.movieTitle
 	cursor: hand;
 }
 
-a { text-decoration: none; color: #880902; }
-a:VISITED { text-decoration: none; color: #880902; }
-a:HOVER { text-decoration: underline; color: #880902; }
-a:ACTIVE { text-decoration: underline; color: #880902; }
+a.infoWindowLink {
+	text-decoration: none;
+	color: #880902;
+}
+
+a.infoWindowLink:VISITED {
+	text-decoration: none;
+	color: #880902;
+}
+
+a.infoWindowLink:HOVER {
+	text-decoration: underline;
+	color: #880902;
+}
+
+a.infoWindowLink:ACTIVE {
+	text-decoration: underline;
+	color: #880902;
+}
