@@ -8,24 +8,18 @@ public class MovieLocation implements Serializable
 	private Double latitude;
 	private Double longitude;
 	private String formattedAddress;
+	private String funFacts;
 
 	public MovieLocation()
 	{
 	}
 
-	public MovieLocation(final Double latitude, final Double longitude, final String formattedAddress)
+	public MovieLocation(final Double latitude, final Double longitude, final String formattedAddress, final String funFacts)
 	{
 		this.latitude = latitude;
 		this.longitude = longitude;
 		this.formattedAddress = formattedAddress;
-	}
-
-	/**
-	 * @return the serialversionuid
-	 */
-	public static long getSerialversionuid()
-	{
-		return serialVersionUID;
+		this.funFacts = funFacts;
 	}
 
 	/**
@@ -37,11 +31,29 @@ public class MovieLocation implements Serializable
 	}
 
 	/**
+	 * @param latitude
+	 *            the latitude to set
+	 */
+	public void setLatitude(final Double latitude)
+	{
+		this.latitude = latitude;
+	}
+
+	/**
 	 * @return the longitude
 	 */
 	public Double getLongitude()
 	{
 		return this.longitude;
+	}
+
+	/**
+	 * @param longitude
+	 *            the longitude to set
+	 */
+	public void setLongitude(final Double longitude)
+	{
+		this.longitude = longitude;
 	}
 
 	/**
@@ -52,6 +64,40 @@ public class MovieLocation implements Serializable
 		return this.formattedAddress;
 	}
 
+	/**
+	 * @param formattedAddress
+	 *            the formattedAddress to set
+	 */
+	public void setFormattedAddress(final String formattedAddress)
+	{
+		this.formattedAddress = formattedAddress;
+	}
+
+	/**
+	 * @return the funFacts
+	 */
+	public String getFunFacts()
+	{
+		return this.funFacts;
+	}
+
+	/**
+	 * @param funFacts
+	 *            the funFacts to set
+	 */
+	public void setFunFacts(final String funFacts)
+	{
+		this.funFacts = funFacts;
+	}
+
+	/**
+	 * @return the serialversionuid
+	 */
+	public static long getSerialversionuid()
+	{
+		return serialVersionUID;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see java.lang.Object#toString()
@@ -59,7 +105,8 @@ public class MovieLocation implements Serializable
 	@Override
 	public String toString()
 	{
-		return "MovieLocation [latitude=" + this.latitude + ", longitude=" + this.longitude + ", formattedAddress=" + this.formattedAddress + "]";
+		return "MovieLocation [latitude=" + this.latitude + ", longitude=" + this.longitude + ", formattedAddress=" + this.formattedAddress + ", funFacts="
+				+ this.funFacts + "]";
 	}
 
 	/*
@@ -71,9 +118,10 @@ public class MovieLocation implements Serializable
 	{
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + (this.formattedAddress == null ? 0 : this.formattedAddress.hashCode());
-		result = prime * result + (this.latitude == null ? 0 : this.latitude.hashCode());
-		result = prime * result + (this.longitude == null ? 0 : this.longitude.hashCode());
+		result = (prime * result) + ((this.formattedAddress == null) ? 0 : this.formattedAddress.hashCode());
+		result = (prime * result) + ((this.funFacts == null) ? 0 : this.funFacts.hashCode());
+		result = (prime * result) + ((this.latitude == null) ? 0 : this.latitude.hashCode());
+		result = (prime * result) + ((this.longitude == null) ? 0 : this.longitude.hashCode());
 		return result;
 	}
 
@@ -108,6 +156,17 @@ public class MovieLocation implements Serializable
 		{
 			return false;
 		}
+		if (this.funFacts == null)
+		{
+			if (other.funFacts != null)
+			{
+				return false;
+			}
+		}
+		else if (!this.funFacts.equals(other.funFacts))
+		{
+			return false;
+		}
 		if (this.latitude == null)
 		{
 			if (other.latitude != null)
@@ -132,5 +191,4 @@ public class MovieLocation implements Serializable
 		}
 		return true;
 	}
-
 }

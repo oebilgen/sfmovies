@@ -1,17 +1,36 @@
 var defaultCenter = new google.maps.LatLng(37.7954783, -122.4052922);
 var defaultZoom = 15;
-var searchCenter = new google.maps.LatLng(37.7194362, -122.4150745);
-var searchZoom = 11;
 var endpointPrefix = '/v1/movies/';
 var map = null;
-var movies = null;
+var movieSummarys = null;
 var overlappingMarkerSpiderfier = null;
-var infoWindow = null;
+var infoWindow = new google.maps.InfoWindow({});
+var infoWindowContents = {};
 var markerCluster = null;
-var usualIcon = 'images/usualIcon.png';
-var spiderfiedIcon = 'images/spiderfiedIcon.png';
+var usualIcon = 'http://cdn.sfmovies.org/images/usualIcon.201408270533.png';
+var spiderfiedIcon = 'http://cdn.sfmovies.org/images/spiderfiedIcon.201408270533.png';
+var isFullScreen = false;
+var boundsChangeExpected = false;
+var reloadRequested = false;
+var lastType = 'all';
+var lastQuery = '';
+var lastMapBounds = null;
 
-function initialize()
+function setMovieId(movieId)
+{
+	if (movieId == null || movieId.trim() == '')
+	{
+		lastType = 'all';
+		lastQuery = '';
+	}
+	else
+	{
+		lastType = 'movieId';
+		lastQuery = movieId;
+	}
+}
+
+function initializeMap()
 {
 	map = new google.maps.Map(document.getElementById('map'),
 	{
@@ -19,7 +38,96 @@ function initialize()
 	    center : defaultCenter,
 	    mapTypeId : google.maps.MapTypeId.ROADMAP
 	});
-	setTimeout(showAllMarkers, 0);
+	google.maps.event.addListener(map, 'bounds_changed', function()
+	{
+		if (boundsChangeExpected)
+		{
+			console.debug('Bounds change is expected, skipping event...');
+			return;
+		}
+		console.info('Map reload is requested.');
+		reloadRequested = true;
+	});
+	google.maps.event.addListener(map, 'idle', function()
+	{
+		if (lastMapBounds == null)
+		{
+			lastMapBounds = map.getBounds();
+		}
+		else if (lastQuery != '')
+		{
+			console.info('Last query is not empty [' + lastQuery + '], skipping map draw...');
+			return;
+		}
+		if (boundsChangeExpected)
+		{
+			console.info('Bounds change is expected, skipping map draw...');
+			boundsChangeExpected = false;
+			return;
+		}
+		if (reloadRequested)
+		{
+			showMarkers(lastType, lastQuery);
+		}
+		reloadRequested = false;
+	});
+	overlappingMarkerSpiderfier = new OverlappingMarkerSpiderfier(map,
+	{
+	    markersWontMove : true,
+	    markersWontHide : true,
+	    legWeight : 1
+	});
+	overlappingMarkerSpiderfier.addListener('click', function(marker)
+	{
+		boundsChangeExpected = true;
+		var movieId = movieSummarys[marker.movieId].id;
+		if (movieId in infoWindowContents)
+		{
+			infoWindow.setContent(infoWindowContents[movieId]);
+			infoWindow.open(map, marker);
+			return;
+		}
+		
+		var movieUrl = endpointPrefix + 'movieDetail/' + movieId;
+		$.ajax(
+		{
+		    type : 'GET',
+		    dataType : 'json',
+		    url : movieUrl,
+		    success : function(remoteMovie)
+		    {
+			    if (remoteMovie == null)
+			    {
+				    alert('Movie ID=[' + movieId + '] not found.');
+				    return;
+			    }
+			    boundsChangeExpected = true;
+			    infoWindow.setContent(createInfoWindowContent(remoteMovie));
+			    infoWindow.open(map, marker);
+		    },
+		    error : function(jqXHR, textStatus, errorThrown)
+		    {
+			    handleAjaxError(jqXHR, textStatus, errorThrown);
+		    }
+		});
+	});
+	overlappingMarkerSpiderfier.addListener('spiderfy', function(markers)
+	{
+		boundsChangeExpected = true;
+		for (var i = 0; i < markers.length; i++)
+		{
+			markers[i].setIcon(spiderfiedIcon);
+		}
+		infoWindow.close();
+	});
+	overlappingMarkerSpiderfier.addListener('unspiderfy', function(markers)
+	{
+		boundsChangeExpected = true;
+		for (var i = 0; i < markers.length; i++)
+		{
+			markers[i].setIcon(usualIcon);
+		}
+	});
 }
 
 $(document).ready(
@@ -31,6 +139,7 @@ $(document).ready(
 	            serviceUrl : endpointPrefix + 'search',
 	            showNoSuggestionNotice : true,
 	            maxHeight : '60%',
+	            minChars : 3,
 	            onSelect : function(value, data)
 	            {
 		            var endpoint = '';
@@ -103,20 +212,53 @@ $(document).ready(
 	        {
 		        if ($(this).val().length === 0)
 		        {
-			        showMarkers('all', '');
+		        	lastType = 'all';
+		        	lastQuery = '';
+			        showMarkers(lastType, lastQuery);
 		        }
 	        });
         });
 
+function getMapBounds()
+{
+	var mapBounds = map.getBounds();
+	var mapBoundsSouthWest = mapBounds.getSouthWest();
+	var mapBoundsNorthEast = mapBounds.getNorthEast();
+	var parameter = 'swc=' + mapBoundsSouthWest.lat() + ',' + mapBoundsSouthWest.lng();
+	parameter += '&nec=' + mapBoundsNorthEast.lat() + ',' + mapBoundsNorthEast.lng();
+	return parameter;
+}
+
 function showMarkers(type, query)
 {
+	console.info('Call: showMarkers(' + type + ',' + query + ')');
+	var newMapBounds = getMapBounds();
+	if (lastType == type && lastQuery == query && lastMapBounds == newMapBounds)
+	{
+		console.info('Nothing changed, skipping showMarkers...');
+		return;
+	}
+	lastType = type;
+	lastQuery = query;
+	if (markerCluster != null)
+	{
+		markerCluster.clearMarkers();
+	}
+	if (overlappingMarkerSpiderfier != null)
+	{
+		overlappingMarkerSpiderfier.clearMarkers();
+	}
 	var url = endpointPrefix + type;
 	if (query != '')
 	{
 		url += '/' + query;
 		$('#query').val(decodeURIComponent(query));
 	}
-	
+	if (type == 'all')
+	{
+		url += '?' + newMapBounds;
+	}
+	console.info("Ajax URL: " + url);
 	$.ajax(
 	{
 	    type : 'GET',
@@ -126,99 +268,70 @@ function showMarkers(type, query)
 	    {
 		    if (result.success)
 		    {
-			    if (type != 'all')
+			    movieSummarys = result.data;
+			    if (movieSummarys.length === 0)
 			    {
-				    if (markerCluster != null)
+				    if (type != 'all')
 				    {
-					    markerCluster.clearMarkers();
+					    alert('No results.');
 				    }
-				    map.setZoom(searchZoom);
-				    map.setCenter(searchCenter);
-			    }
-			    movies = result.data;
-			    if (movies.length === 0)
-			    {
-				    alert('No results.');
 				    return;
 			    }
-			    else
+			    console.log(movieSummarys.length + ' result(s).');
+			    var bounds = new google.maps.LatLngBounds();
+			    var markers = [];
+			    var i;
+			    for (i = 0; i < movieSummarys.length; i++)
 			    {
-				    console.log(movies.length + ' results');
-				    infoWindow = new google.maps.InfoWindow({});
-				    var overlappingMarkerSpiderfier = new OverlappingMarkerSpiderfier(map,
+				    var movie = movieSummarys[i];
+				    if (type == 'movieId')
 				    {
-				        markersWontMove : true,
-				        markersWontHide : true,
-				        legWeight : 1
-				    });
-				    overlappingMarkerSpiderfier.addListener('click', function(marker)
+					    $('#query').val(movie.title);
+				    }
+				    var movieLocations = movie.movieLocations;
+				    if (movieLocations == null || movieLocations.length == 0)
 				    {
-					    infoWindow.setContent(createDescription(marker.movieId, marker.locationId));
-					    infoWindow.open(map, marker);
-				    });
-				    overlappingMarkerSpiderfier.addListener('spiderfy', function(markers)
+					    console.info('The movie "' + movie.title + '" does not have a known address, skipping...');
+					    continue;
+				    }
+				    for (var j = 0; j < movieLocations.length; j++)
 				    {
-					    for (var i = 0; i < markers.length; i++)
+					    movieLocation = movieLocations[j];
+					    if (movieLocation == null)
 					    {
-						    markers[i].setIcon(spiderfiedIcon);
-					    }
-					    infoWindow.close();
-				    });
-				    overlappingMarkerSpiderfier.addListener('unspiderfy', function(markers)
-				    {
-					    for (var i = 0; i < markers.length; i++)
-					    {
-						    markers[i].setIcon(usualIcon);
-					    }
-				    });
-				    var bounds = new google.maps.LatLngBounds();
-				    var markers = [];
-				    var i;
-				    for (i = 0; i < movies.length; i++)
-				    {
-					    var movie = movies[i];
-					    if (type == 'movieId')
-					    {
-						    $('#query').val(movie.title);
-					    }
-					    var movieLocations = movie.movieLocations;
-					    if (movieLocations == null || movieLocations.length == 0)
-					    {
-						    console.info('The movie "' + movie.title + '" does not have a known address, skipping...');
+						    console.error('DATA ERROR: title:' + movie.title + ' movieLocation:%o', movieLocation);
 						    continue;
 					    }
-					    for (var j = 0; j < movieLocations.length; j++)
+					    var coordinates = new google.maps.LatLng(movieLocation.latitude, movieLocation.longitude);
+					    bounds.extend(coordinates);
+					    var marker = new google.maps.Marker(
 					    {
-						    movieLocation = movieLocations[j];
-						    if (movieLocation == null)
-						    {
-							    console.error("DATA ERROR: title:" + movie.title + " movieLocation:%o", movieLocation);
-							    continue;
-						    }
-						    var coordinates = new google.maps.LatLng(movieLocation.latitude, movieLocation.longitude);
-						    bounds.extend(coordinates);
-						    var marker = new google.maps.Marker(
-						    {
-						        position : coordinates,
-						        title : movie.title,
-						        icon : usualIcon,
-						        movieId : i,
-						        locationId : j
-						    });
-						    overlappingMarkerSpiderfier.addMarker(marker);
-						    markers.push(marker);
-						    console.log('Added marker at ' + coordinates);
-					    }
-				    }
-				    
-				    markerCluster = new MarkerClusterer(map, markers);
-				    markerCluster.setMaxZoom(14);
-				    
-				    if (i == 0 && type == 'movieId')
-				    {
-					    $('#query').val('');
+					        position : coordinates,
+					        title : movie.title,
+					        icon : usualIcon,
+					        movieId : i,
+					        locationId : j
+					    });
+					    overlappingMarkerSpiderfier.addMarker(marker);
+					    markers.push(marker);
+					    console.log(movie.title + ' marker at ' + coordinates);
 				    }
 			    }
+			    
+			    markerCluster = new MarkerClusterer(map, markers);
+			    markerCluster.setMaxZoom(14);
+			    if (type != 'all')
+			    {
+				    boundsChangeExpected = true;
+				    map.fitBounds(bounds);
+				    lastMapBounds = bounds;
+			    }
+			    
+			    if (i == 0 && type == 'movieId')
+			    {
+				    $('#query').val('');
+			    }
+			    
 		    }
 		    else
 		    {
@@ -227,22 +340,33 @@ function showMarkers(type, query)
 	    },
 	    error : function(jqXHR, textStatus, errorThrown)
 	    {
-		    alert('Error occured: ' + JSON.stringify(textStatus));
-		    console.log('textStatus: ' + textStatus);
-		    console.log('errorThrown: ' + errorThrown);
-		    console.log('jqXHR' + jqXHR);
+		    handleAjaxError(jqXHR, textStatus, errorThrown);
 	    }
 	
 	});
 }
 
-function createDescription(movieId, locationId)
+function handleAjaxError(jqXHR, textStatus, errorThrown)
 {
-	var movie = movies[movieId];
-	var description = '<div class="infoWindow"><span class="movieTitle">' + movie.title
+	alert('Error occured: ' + JSON.stringify(textStatus));
+	console.log('textStatus: ' + textStatus);
+	console.log('errorThrown: ' + errorThrown);
+	console.log('jqXHR' + jqXHR);
+}
+
+function createInfoWindowContent(movie)
+{
+	var movieSummary = movie.movieSummary;
+	if (movieSummary.id in infoWindowContents)
+	{
+		return infoWindowContents[movieSummary.id];
+	}
+	var title = movieSummary.title;
+	var movieLocations = movieSummary.movieLocations;
+	var infoWindowContent = '<div class="infoWindow"><span class="movieTitle">' + title
 	        + ' (<a href="#" class="infoWindowLink" onclick="showMarkers(\'releaseYear\', \'' + encodeURIComponent(movie.releaseYear) + '\')">'
 	        + movie.releaseYear + '</a>)</span><br>';
-	description += 'Director: <a href="#" class="infoWindowLink" onclick="showMarkers(\'director\', \'' + encodeURIComponent(movie.director) + '\')">'
+	infoWindowContent += 'Director: <a href="#" class="infoWindowLink" onclick="showMarkers(\'director\', \'' + encodeURIComponent(movie.director) + '\')">'
 	        + movie.director + '</a><br>';
 	var actors = [];
 	var actorsHashtag = '';
@@ -252,27 +376,36 @@ function createDescription(movieId, locationId)
 		        + '</a>');
 		actorsHashtag += ' #' + movie.actors[i].replace(' ', '');
 	}
-	description += 'Actors: ' + actors.join(', ') + '<br>';
-	description += 'Production Company: <a href="#" class="infoWindowLink" onclick="showMarkers(\'productionCompany\', \''
+	infoWindowContent += 'Actors: ' + actors.join(', ') + '<br>';
+	infoWindowContent += 'Production Company: <a href="#" class="infoWindowLink" onclick="showMarkers(\'productionCompany\', \''
 	        + encodeURIComponent(movie.productionCompany) + '\')">' + movie.productionCompany + '</a><br>';
-	description += 'Distributor: <a href="#" class="infoWindowLink" onclick="showMarkers(\'distributor\', \'' + encodeURIComponent(movie.distributor) + '\')">'
-	        + movie.distributor + '</a><br>';
-	description += 'Writer: <a href="#" class="infoWindowLink" onclick="showMarkers(\'writer\', \'' + encodeURIComponent(movie.writer) + '\')">' + movie.writer
-	        + '</a><br>';
-	var formattedAddress = movie.movieLocations[locationId].formattedAddress;
-	description += 'Address: <a href="https://www.google.com/maps/?q=' + encodeURIComponent(formattedAddress) + '" class="infoWindowLink" target="_blank">'
-	        + formattedAddress + '</a><br>';
-	description += '<div class="shareButtons"><input type="button" onclick="window.open(\'http://google.com/search?q='
-	        + encodeURIComponent(movie.title + ' ' + movie.releaseYear + ' movie watch online') + '\');" value="Watch online"> ';
-	description += '<input type="button" onclick="window.open(\'http://www.amazon.com/s/ref=nb_sb_noss_1?field-keywords='
-	        + encodeURIComponent(movie.title + ' ' + movie.releaseYear) + ' movie\');" value="Buy on Amazon"> ';
-	description += '<input type="button" onclick="window.open(\'https://www.uber.com/invite/uberoebilgen\');" value="Request Uber"> ';
-	description += '<input type="button" onclick="window.open(\'/?movieId=' + movie.id + '\');" value="Link"> ';
-	description += '<input type="button" onclick="window.open(\'http://twitter.com/share?url=http://www.sfmovies.org/?movieId=' + movie.id + '&text='
-	        + movie.title + encodeURIComponent(' #sanfrancisco #movie' + actorsHashtag)
+	infoWindowContent += 'Distributor: <a href="#" class="infoWindowLink" onclick="showMarkers(\'distributor\', \'' + encodeURIComponent(movie.distributor)
+	        + '\')">' + movie.distributor + '</a><br>';
+	infoWindowContent += 'Writer: <a href="#" class="infoWindowLink" onclick="showMarkers(\'writer\', \'' + encodeURIComponent(movie.writer) + '\')">'
+	        + movie.writer + '</a><br>';
+	infoWindowContent += 'Addresses:<br>';
+	for (var i = 0; i < movieLocations.length; i++)
+	{
+		var movieLocation = movieLocations[i];
+		infoWindowContent += '<li><a href="https://www.google.com/maps/?q=' + encodeURIComponent(movieLocation.formattedAddress)
+		        + '" class="infoWindowLink" target="_blank">' + movieLocation.formattedAddress + '</a>';
+		if (movieLocation.funFacts != null)
+		{
+			infoWindowContent += '<br><span class="funFacts">' + movieLocation.funFacts + '</span>';
+		}
+		infoWindowContent += '</li>';
+	}
+	infoWindowContent += '<div class="shareButtons"><input type="button" onclick="window.open(\'http://google.com/search?q='
+	        + encodeURIComponent(title + ' ' + movie.releaseYear + ' movie watch online') + '\');" value="Watch online"> ';
+	infoWindowContent += '<input type="button" onclick="window.open(\'http://www.amazon.com/s/ref=nb_sb_noss_1?field-keywords='
+	        + encodeURIComponent(title + ' ' + movie.releaseYear) + ' movie\');" value="Buy on Amazon"> ';
+	infoWindowContent += '<input type="button" onclick="window.open(\'/?movieId=' + movieSummary.id + '\');" value="Link"> ';
+	infoWindowContent += '<input type="button" onclick="window.open(\'http://twitter.com/share?url=http://www.sfmovies.org/?movieId=' + movieSummary.id
+	        + '&text=' + title + encodeURIComponent(' #sanfrancisco #movie' + actorsHashtag)
 	        + '&via=oebilgen&related=uber\', \'\', \'width=575, height=230\');" value="Tweet"> ';
-	description += '</div></div>';
-	return description;
+	infoWindowContent += '</div></div>';
+	infoWindowContents[movieSummary.id] = infoWindowContent;
+	return infoWindowContent;
 }
 
 function getQueryString(name)
@@ -281,7 +414,7 @@ function getQueryString(name)
 	var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"), results = regex.exec(location.search);
 	return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
-var isFullScreen = false;
+
 function toggleFullScreen()
 {
 	if (isFullScreen)
@@ -304,7 +437,7 @@ function toggleFullScreen()
 	}
 	else
 	{
-		$('#fullScreenButton').prop('value', 'Theather view');
+		$('#fullScreenButton').prop('value', 'Theatre view');
 		$('#fullScreenButton').animate(
 		{
 			margin : '8px 0px auto auto'
@@ -322,4 +455,12 @@ function toggleFullScreen()
 	}
 	isFullScreen = !isFullScreen;
 }
-google.maps.event.addDomListener(window, "load", initialize);
+
+function printStackTrace()
+{
+	var e = new Error('dummy');
+	var stack = e.stack.replace(/^[^\(]+?[\n$]/gm, '').replace(/^\s+at\s+/gm, '').replace(/^Object.<anonymous>\s*\(/gm, '{anonymous}()@').split('\n');
+	console.error(stack);
+}
+
+google.maps.event.addDomListener(window, 'load', initializeMap);

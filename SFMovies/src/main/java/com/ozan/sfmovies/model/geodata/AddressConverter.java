@@ -55,7 +55,7 @@ public class AddressConverter
 			return null;
 		}
 		final Result[] results = googleResponse.getResults();
-		if (results == null || results.length == 0)
+		if ((results == null) || (results.length == 0))
 		{
 			logger.error("No results for address [" + address + "]");
 			return null;
@@ -78,7 +78,7 @@ public class AddressConverter
 			formattedAddress = address;
 		}
 
-		return new MovieLocation(coordinates.getLatitude(), coordinates.getLongitude(), formattedAddress);
+		return new MovieLocation(coordinates.getLatitude(), coordinates.getLongitude(), formattedAddress, null);
 	}
 
 	public GoogleResponse convertLocationToAddress(final String latlongString) throws IOException

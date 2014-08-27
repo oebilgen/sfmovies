@@ -1,13 +1,64 @@
 package com.ozan.sfmovies.model.geodata;
 
-import org.codehaus.jackson.annotate.JsonProperty;
+import java.io.Serializable;
 
-public class Coordinates
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class Coordinates implements Serializable
 {
+	private static Logger logger = LoggerFactory.getLogger(Coordinates.class);
+	private static final long serialVersionUID = 1L;
 	@JsonProperty("lat")
 	private Double latitude;
 	@JsonProperty("lng")
 	private Double longitude;
+
+	public Coordinates()
+	{
+
+	}
+
+	public Coordinates(final String coordinateString) throws IllegalArgumentException
+	{
+		if (coordinateString == null)
+		{
+			throw new IllegalArgumentException("Parameter cannot be null.");
+		}
+		final String[] coordinates = coordinateString.split(",");
+		if ((coordinates == null) || (coordinates.length != 2))
+		{
+			throw new IllegalArgumentException("Parameter must be in x,y format.");
+		}
+		final String latitudeString = coordinates[0].trim();
+		if (latitudeString.isEmpty())
+		{
+			throw new IllegalArgumentException("Empty latitude value.");
+		}
+		final String longitudeString = coordinates[1].trim();
+		if (longitudeString.isEmpty())
+		{
+			throw new IllegalArgumentException("Empty longitude value.");
+		}
+		try
+		{
+			this.latitude = Double.parseDouble(latitudeString);
+		}
+		catch (final NumberFormatException e)
+		{
+			throw new IllegalArgumentException("Cannot convert latitude string [" + latitudeString + "] to double.");
+		}
+		try
+		{
+			this.longitude = Double.parseDouble(longitudeString);
+		}
+		catch (final NumberFormatException e)
+		{
+			throw new IllegalArgumentException("Cannot convert longitude string [" + longitudeString + "] to double.");
+		}
+		logger.debug(this.toString());
+	}
 
 	public Double getLatitude()
 	{
@@ -40,8 +91,8 @@ public class Coordinates
 	{
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + (this.latitude == null ? 0 : this.latitude.hashCode());
-		result = prime * result + (this.longitude == null ? 0 : this.longitude.hashCode());
+		result = (prime * result) + (this.latitude == null ? 0 : this.latitude.hashCode());
+		result = (prime * result) + (this.longitude == null ? 0 : this.longitude.hashCode());
 		return result;
 	}
 

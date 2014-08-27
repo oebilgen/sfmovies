@@ -17,9 +17,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.ozan.sfmovies.model.Cache;
 import com.ozan.sfmovies.model.Movie;
+import com.ozan.sfmovies.model.MovieSummary;
+import com.ozan.sfmovies.model.MovieSummaryResponse;
 import com.ozan.sfmovies.model.RawMovieData;
-import com.ozan.sfmovies.model.Response;
 import com.ozan.sfmovies.model.SearchResultCollection;
+import com.ozan.sfmovies.model.geodata.Coordinates;
 
 @Controller
 @RequestMapping("/")
@@ -69,33 +71,56 @@ public class JSONController
 		this.cache.clear();
 	}
 
-	@RequestMapping(value = "cdnData", method = RequestMethod.GET, produces = "application/json")
+	@RequestMapping(value = "reloadCdnData", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
-	public ResponseEntity<Response> loadCdnData()
+	public ResponseEntity<MovieSummaryResponse> reloadCdnData()
 	{
 		this.cache.clear();
 		this.cache.loadFormattedCdnData();
-		return new ResponseEntity<Response>(new Response(this.cache.getAllMovies()), HttpStatus.OK);
+		return new ResponseEntity<MovieSummaryResponse>(new MovieSummaryResponse(this.cache.getMovieSummaries(null, null)), HttpStatus.OK);
+	}
+
+	@RequestMapping(value = "printMovies", method = RequestMethod.GET, produces = "application/json")
+	@ResponseBody
+	public List<Movie> loadCdnData()
+	{
+		return this.cache.getMovies();
 	}
 
 	@RequestMapping(value = "all", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
-	public ResponseEntity<Response> noFilter()
+	public ResponseEntity<MovieSummaryResponse> allMovies(@RequestParam(value = "swc", required = false) final String southWestCornerString,
+			@RequestParam(value = "nec", required = false) final String northEastCornerString)
 	{
-		final List<Movie> movies = this.cache.getAllMovies();
-		return new ResponseEntity<Response>(new Response(movies), HttpStatus.OK);
+		Coordinates southWestCorner = null, northEastCorner = null;
+		if ((southWestCornerString != null) && (northEastCornerString != null))
+		{
+			try
+			{
+				southWestCorner = new Coordinates(southWestCornerString);
+				northEastCorner = new Coordinates(northEastCornerString);
+			}
+			catch (final IllegalArgumentException e)
+			{
+				return new ResponseEntity<MovieSummaryResponse>(new MovieSummaryResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+			}
+		}
+		final List<MovieSummary> movies = this.cache.getMovieSummaries(southWestCorner, northEastCorner);
+		return new ResponseEntity<MovieSummaryResponse>(new MovieSummaryResponse(movies), HttpStatus.OK);
 	}
 
 	@RequestMapping(value = "movieId/{movieId}", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
-	public ResponseEntity<Response> movieId(@PathVariable("movieId") final UUID movieId)
+	public ResponseEntity<MovieSummaryResponse> movieId(@PathVariable("movieId") final UUID movieId)
 	{
-		if (movieId == null)
-		{
-			return new ResponseEntity<Response>(new Response("Missing parameter: movieId"), HttpStatus.BAD_REQUEST);
-		}
-		final List<Movie> movies = this.cache.getMoviesById(movieId);
-		return new ResponseEntity<Response>(new Response(movies), HttpStatus.OK);
+		return new ResponseEntity<MovieSummaryResponse>(new MovieSummaryResponse(this.cache.getMovieById(movieId)), HttpStatus.OK);
+	}
+
+	@RequestMapping(value = "movieDetail/{movieId}", method = RequestMethod.GET, produces = "application/json")
+	@ResponseBody
+	public Movie movieDetail(@PathVariable("movieId") final UUID movieId)
+	{
+		return this.cache.getMovieById(movieId);
 	}
 
 	@RequestMapping(value = "search", method = RequestMethod.GET, produces = "application/json")
@@ -108,85 +133,57 @@ public class JSONController
 
 	@RequestMapping(value = "actor/{actor}", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
-	public ResponseEntity<Response> actorFilter(@PathVariable("actor") final String actor)
+	public ResponseEntity<MovieSummaryResponse> actorFilter(@PathVariable("actor") final String actor)
 	{
-		if (actor == null || actor.isEmpty())
-		{
-			return new ResponseEntity<Response>(new Response("Missing parameter: actor"), HttpStatus.BAD_REQUEST);
-		}
-		final List<Movie> movies = this.cache.getMoviesByActor(actor);
-		return new ResponseEntity<Response>(new Response(movies), HttpStatus.OK);
+		final List<MovieSummary> movies = this.cache.getMoviesByActor(actor);
+		return new ResponseEntity<MovieSummaryResponse>(new MovieSummaryResponse(movies), HttpStatus.OK);
 	}
 
 	@RequestMapping(value = "director/{director}", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
-	public ResponseEntity<Response> directorFilter(@PathVariable("director") final String director)
+	public ResponseEntity<MovieSummaryResponse> directorFilter(@PathVariable("director") final String director)
 	{
-		if (director == null || director.isEmpty())
-		{
-			return new ResponseEntity<Response>(new Response("Missing parameter: director"), HttpStatus.BAD_REQUEST);
-		}
-		final List<Movie> movies = this.cache.getMoviesByDirector(director);
-		return new ResponseEntity<Response>(new Response(movies), HttpStatus.OK);
+		final List<MovieSummary> movies = this.cache.getMoviesByDirector(director);
+		return new ResponseEntity<MovieSummaryResponse>(new MovieSummaryResponse(movies), HttpStatus.OK);
 	}
 
 	@RequestMapping(value = "distributor/{distributor}", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
-	public ResponseEntity<Response> distributorFilter(@PathVariable("distributor") final String distributor)
+	public ResponseEntity<MovieSummaryResponse> distributorFilter(@PathVariable("distributor") final String distributor)
 	{
-		if (distributor == null || distributor.isEmpty())
-		{
-			return new ResponseEntity<Response>(new Response("Missing parameter: distributor"), HttpStatus.BAD_REQUEST);
-		}
-		final List<Movie> movies = this.cache.getMoviesByDistributor(distributor);
-		return new ResponseEntity<Response>(new Response(movies), HttpStatus.OK);
+		final List<MovieSummary> movies = this.cache.getMoviesByDistributor(distributor);
+		return new ResponseEntity<MovieSummaryResponse>(new MovieSummaryResponse(movies), HttpStatus.OK);
 	}
 
 	@RequestMapping(value = "productionCompany/{productionCompany}", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
-	public ResponseEntity<Response> productionCompanyFilter(@PathVariable("productionCompany") final String productionCompany)
+	public ResponseEntity<MovieSummaryResponse> productionCompanyFilter(@PathVariable("productionCompany") final String productionCompany)
 	{
-		if (productionCompany == null || productionCompany.isEmpty())
-		{
-			return new ResponseEntity<Response>(new Response("Missing parameter: productionCompany"), HttpStatus.BAD_REQUEST);
-		}
-		final List<Movie> movies = this.cache.getMoviesByProductionCompany(productionCompany);
-		return new ResponseEntity<Response>(new Response(movies), HttpStatus.OK);
+		final List<MovieSummary> movies = this.cache.getMoviesByProductionCompany(productionCompany);
+		return new ResponseEntity<MovieSummaryResponse>(new MovieSummaryResponse(movies), HttpStatus.OK);
 	}
 
 	@RequestMapping(value = "title/{title}", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
-	public ResponseEntity<Response> titleFilter(@PathVariable("title") final String title)
+	public ResponseEntity<MovieSummaryResponse> titleFilter(@PathVariable("title") final String title)
 	{
-		if (title == null || title.isEmpty())
-		{
-			return new ResponseEntity<Response>(new Response("Missing parameter: title"), HttpStatus.BAD_REQUEST);
-		}
-		final List<Movie> movies = this.cache.getMoviesByTitle(title);
-		return new ResponseEntity<Response>(new Response(movies), HttpStatus.OK);
+		final List<MovieSummary> movies = this.cache.getMoviesByTitle(title);
+		return new ResponseEntity<MovieSummaryResponse>(new MovieSummaryResponse(movies), HttpStatus.OK);
 	}
 
 	@RequestMapping(value = "writer/{writer}", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
-	public ResponseEntity<Response> writerFilter(@PathVariable("writer") final String writer)
+	public ResponseEntity<MovieSummaryResponse> writerFilter(@PathVariable("writer") final String writer)
 	{
-		if (writer == null || writer.isEmpty())
-		{
-			return new ResponseEntity<Response>(new Response("Missing parameter: writer"), HttpStatus.BAD_REQUEST);
-		}
-		final List<Movie> movies = this.cache.getMoviesByWriter(writer);
-		return new ResponseEntity<Response>(new Response(movies), HttpStatus.OK);
+		final List<MovieSummary> movies = this.cache.getMoviesByWriter(writer);
+		return new ResponseEntity<MovieSummaryResponse>(new MovieSummaryResponse(movies), HttpStatus.OK);
 	}
 
 	@RequestMapping(value = "releaseYear/{releaseYear}", method = RequestMethod.GET, produces = "application/json")
 	@ResponseBody
-	public ResponseEntity<Response> productionCompanyFilter(@PathVariable("releaseYear") final Integer releaseYear)
+	public ResponseEntity<MovieSummaryResponse> productionCompanyFilter(@PathVariable("releaseYear") final Integer releaseYear)
 	{
-		if (releaseYear == null)
-		{
-			return new ResponseEntity<Response>(new Response("Missing parameter: releaseYear"), HttpStatus.BAD_REQUEST);
-		}
-		final List<Movie> movies = this.cache.getMoviesByReleaseYear(releaseYear);
-		return new ResponseEntity<Response>(new Response(movies), HttpStatus.OK);
+		final List<MovieSummary> movies = this.cache.getMoviesByReleaseYear(releaseYear);
+		return new ResponseEntity<MovieSummaryResponse>(new MovieSummaryResponse(movies), HttpStatus.OK);
 	}
 }

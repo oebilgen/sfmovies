@@ -1,34 +1,32 @@
 package com.ozan.sfmovies.model;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.ozan.sfmovies.model.geodata.Coordinates;
 import com.ozan.sfmovies.utilities.Utilities;
 
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-public class Movie implements Serializable
+public class Movie
 {
+	private static Logger logger = LoggerFactory.getLogger(Movie.class);
 	private static final long serialVersionUID = 1L;
-	private UUID id;
+	private MovieSummary movieSummary;
 	private List<String> actors;
 	private String director;
 	private String distributor;
-	private String funFacts;
 	private String productionCompany;
 	private Integer releaseYear;
-	private String title;
 	private String writer;
-	private List<MovieLocation> movieLocations;
 
 	public Movie()
 	{
-		this.id = UUID.randomUUID();
+		this.movieSummary = new MovieSummary();
 		this.actors = new ArrayList<>();
-		this.movieLocations = new ArrayList<>();
 	}
 
 	public Movie(final RawMovieData newRawMovie)
@@ -48,29 +46,28 @@ public class Movie implements Serializable
 		}
 		this.director = Utilities.trim(newRawMovie.getDirector());
 		this.distributor = Utilities.trim(newRawMovie.getDistributor());
-		this.funFacts = Utilities.trim(newRawMovie.getFunFacts());
 		this.productionCompany = Utilities.trim(newRawMovie.getProductionCompany());
 		this.releaseYear = newRawMovie.getReleaseYear();
-		this.title = Utilities.trim(newRawMovie.getTitle());
+		this.getMovieSummary().setTitle(Utilities.trim(newRawMovie.getTitle()));
 		this.writer = Utilities.trim(newRawMovie.getWriter());
 
 	}
 
 	/**
-	 * @return the id
+	 * @return the movieSummary
 	 */
-	public UUID getId()
+	public MovieSummary getMovieSummary()
 	{
-		return this.id;
+		return this.movieSummary;
 	}
 
 	/**
-	 * @param id
-	 *            the id to set
+	 * @param movieSummary
+	 *            the movieSummary to set
 	 */
-	public void setId(final UUID id)
+	public void setMovieSummary(final MovieSummary movieSummary)
 	{
-		this.id = id;
+		this.movieSummary = movieSummary;
 	}
 
 	/**
@@ -125,23 +122,6 @@ public class Movie implements Serializable
 	}
 
 	/**
-	 * @return the funFacts
-	 */
-	public String getFunFacts()
-	{
-		return this.funFacts;
-	}
-
-	/**
-	 * @param funFacts
-	 *            the funFacts to set
-	 */
-	public void setFunFacts(final String funFacts)
-	{
-		this.funFacts = funFacts;
-	}
-
-	/**
 	 * @return the productionCompany
 	 */
 	public String getProductionCompany()
@@ -176,23 +156,6 @@ public class Movie implements Serializable
 	}
 
 	/**
-	 * @return the title
-	 */
-	public String getTitle()
-	{
-		return this.title;
-	}
-
-	/**
-	 * @param title
-	 *            the title to set
-	 */
-	public void setTitle(final String title)
-	{
-		this.title = title;
-	}
-
-	/**
 	 * @return the writer
 	 */
 	public String getWriter()
@@ -210,23 +173,6 @@ public class Movie implements Serializable
 	}
 
 	/**
-	 * @return the movieLocations
-	 */
-	public List<MovieLocation> getMovieLocations()
-	{
-		return this.movieLocations;
-	}
-
-	/**
-	 * @param movieLocations
-	 *            the movieLocations to set
-	 */
-	public void setMovieLocations(final List<MovieLocation> movieLocations)
-	{
-		this.movieLocations = movieLocations;
-	}
-
-	/**
 	 * @param newMovieLocation
 	 *            new location to add
 	 */
@@ -236,14 +182,14 @@ public class Movie implements Serializable
 		{
 			return;
 		}
-		for (final MovieLocation location : this.movieLocations)
+		for (final MovieLocation location : this.movieSummary.getMovieLocations())
 		{
 			if (location.equals(newMovieLocation))
 			{
 				return;
 			}
 		}
-		this.movieLocations.add(newMovieLocation);
+		this.movieSummary.getMovieLocations().add(newMovieLocation);
 	}
 
 	/**
@@ -261,9 +207,8 @@ public class Movie implements Serializable
 	@Override
 	public String toString()
 	{
-		return "Movie [id=" + this.id + ", actors=" + this.actors + ", director=" + this.director + ", distributor=" + this.distributor + ", funFacts="
-				+ this.funFacts + ", productionCompany=" + this.productionCompany + ", releaseYear=" + this.releaseYear + ", title=" + this.title + ", writer="
-				+ this.writer + ", movieLocations=" + this.movieLocations + "]";
+		return "Movie [movieSummary=" + this.movieSummary + ", actors=" + this.actors + ", director=" + this.director + ", distributor=" + this.distributor
+				+ ", productionCompany=" + this.productionCompany + ", releaseYear=" + this.releaseYear + ", writer=" + this.writer + "]";
 	}
 
 	/*
@@ -275,16 +220,13 @@ public class Movie implements Serializable
 	{
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + (this.actors == null ? 0 : this.actors.hashCode());
-		result = prime * result + (this.director == null ? 0 : this.director.hashCode());
-		result = prime * result + (this.distributor == null ? 0 : this.distributor.hashCode());
-		result = prime * result + (this.funFacts == null ? 0 : this.funFacts.hashCode());
-		result = prime * result + (this.id == null ? 0 : this.id.hashCode());
-		result = prime * result + (this.movieLocations == null ? 0 : this.movieLocations.hashCode());
-		result = prime * result + (this.productionCompany == null ? 0 : this.productionCompany.hashCode());
-		result = prime * result + (this.releaseYear == null ? 0 : this.releaseYear.hashCode());
-		result = prime * result + (this.title == null ? 0 : this.title.hashCode());
-		result = prime * result + (this.writer == null ? 0 : this.writer.hashCode());
+		result = (prime * result) + ((this.actors == null) ? 0 : this.actors.hashCode());
+		result = (prime * result) + ((this.director == null) ? 0 : this.director.hashCode());
+		result = (prime * result) + ((this.distributor == null) ? 0 : this.distributor.hashCode());
+		result = (prime * result) + ((this.movieSummary == null) ? 0 : this.movieSummary.hashCode());
+		result = (prime * result) + ((this.productionCompany == null) ? 0 : this.productionCompany.hashCode());
+		result = (prime * result) + ((this.releaseYear == null) ? 0 : this.releaseYear.hashCode());
+		result = (prime * result) + ((this.writer == null) ? 0 : this.writer.hashCode());
 		return result;
 	}
 
@@ -341,36 +283,14 @@ public class Movie implements Serializable
 		{
 			return false;
 		}
-		if (this.funFacts == null)
+		if (this.movieSummary == null)
 		{
-			if (other.funFacts != null)
+			if (other.movieSummary != null)
 			{
 				return false;
 			}
 		}
-		else if (!this.funFacts.equals(other.funFacts))
-		{
-			return false;
-		}
-		if (this.id == null)
-		{
-			if (other.id != null)
-			{
-				return false;
-			}
-		}
-		else if (!this.id.equals(other.id))
-		{
-			return false;
-		}
-		if (this.movieLocations == null)
-		{
-			if (other.movieLocations != null)
-			{
-				return false;
-			}
-		}
-		else if (!this.movieLocations.equals(other.movieLocations))
+		else if (!this.movieSummary.equals(other.movieSummary))
 		{
 			return false;
 		}
@@ -396,17 +316,6 @@ public class Movie implements Serializable
 		{
 			return false;
 		}
-		if (this.title == null)
-		{
-			if (other.title != null)
-			{
-				return false;
-			}
-		}
-		else if (!this.title.equals(other.title))
-		{
-			return false;
-		}
 		if (this.writer == null)
 		{
 			if (other.writer != null)
@@ -426,24 +335,24 @@ public class Movie implements Serializable
 		final String rawMovieActor1 = Utilities.trim(rawMovieData.getActor1());
 		final String rawMovieActor2 = Utilities.trim(rawMovieData.getActor2());
 		final String rawMovieActor3 = Utilities.trim(rawMovieData.getActor3());
-		if (this.actors == null || this.actors.size() == 0)
+		if ((this.actors == null) || (this.actors.size() == 0))
 		{
-			if (rawMovieActor1 != null || rawMovieActor2 != null || rawMovieActor3 != null)
+			if ((rawMovieActor1 != null) || (rawMovieActor2 != null) || (rawMovieActor3 != null))
 			{
 				return false;
 			}
 		}
 		else
 		{
-			if (rawMovieActor1 != null && !this.actors.contains(rawMovieActor1))
+			if ((rawMovieActor1 != null) && !this.actors.contains(rawMovieActor1))
 			{
 				return false;
 			}
-			if (rawMovieActor2 != null && !this.actors.contains(rawMovieActor2))
+			if ((rawMovieActor2 != null) && !this.actors.contains(rawMovieActor2))
 			{
 				return false;
 			}
-			if (rawMovieActor3 != null && !this.actors.contains(rawMovieActor3))
+			if ((rawMovieActor3 != null) && !this.actors.contains(rawMovieActor3))
 			{
 				return false;
 			}
@@ -470,17 +379,6 @@ public class Movie implements Serializable
 		{
 			return false;
 		}
-		if (this.funFacts == null)
-		{
-			if (rawMovieData.getFunFacts() != null)
-			{
-				return false;
-			}
-		}
-		else if (!this.funFacts.equals(Utilities.trim(rawMovieData.getFunFacts())))
-		{
-			return false;
-		}
 		if (this.productionCompany == null)
 		{
 			if (rawMovieData.getProductionCompany() != null)
@@ -503,14 +401,14 @@ public class Movie implements Serializable
 		{
 			return false;
 		}
-		if (this.title == null)
+		if (this.getMovieSummary().getTitle() == null)
 		{
 			if (rawMovieData.getTitle() != null)
 			{
 				return false;
 			}
 		}
-		else if (!this.title.equals(Utilities.trim(rawMovieData.getTitle())))
+		else if (!this.getMovieSummary().getTitle().equals(Utilities.trim(rawMovieData.getTitle())))
 		{
 			return false;
 		}
@@ -526,5 +424,53 @@ public class Movie implements Serializable
 			return false;
 		}
 		return true;
+	}
+
+	public List<MovieLocation> isWithinBoundries(final Coordinates southWestCorner, final Coordinates northEastCorner)
+	{
+		if ((southWestCorner == null) || (northEastCorner == null))
+		{
+			return this.movieSummary.getMovieLocations();
+		}
+		List<MovieLocation> matchingLocations = null;
+		final Double southWestCornerLatitude = southWestCorner.getLatitude();
+		final Double southWestCornerLongitude = southWestCorner.getLongitude();
+		final Double northEastCornerLatitude = northEastCorner.getLatitude();
+		final Double northEastCornerLongitude = northEastCorner.getLongitude();
+		for (final MovieLocation movieLocation : this.getMovieSummary().getMovieLocations())
+		{
+			if (movieLocation == null)
+			{
+				continue;
+			}
+			final Double movieLocationLatitude = movieLocation.getLatitude();
+			final Double movieLocationLongitude = movieLocation.getLongitude();
+			final boolean eastBound = movieLocationLongitude < northEastCornerLongitude;
+			final boolean westBound = movieLocationLongitude > southWestCornerLongitude;
+			final boolean inLongitude;
+			if (northEastCornerLongitude < southWestCornerLongitude)
+			{
+				inLongitude = eastBound || westBound;
+			}
+			else
+			{
+				inLongitude = eastBound && westBound;
+			}
+			final boolean inLatitude = (movieLocationLatitude > southWestCornerLatitude) && (movieLocationLatitude < northEastCornerLatitude);
+			if (inLongitude && inLatitude)
+			{
+				logger.debug(movieLocation + " is within SW:" + southWestCorner + " NE:" + northEastCorner);
+				if (matchingLocations == null)
+				{
+					matchingLocations = new ArrayList<>();
+				}
+				matchingLocations.add(movieLocation);
+			}
+		}
+		if (matchingLocations == null)
+		{
+			logger.debug("No movie location within SW:" + southWestCorner + " NE:" + northEastCorner);
+		}
+		return matchingLocations;
 	}
 }

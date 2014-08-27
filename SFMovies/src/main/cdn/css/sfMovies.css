@@ -1,7 +1,7 @@
 body {
 	font-family: Arial;
 	font-size: 16px;
-	background-image: url('http://cdn.sfmovies.org/images/background.jpg');
+	background-image: url('http://cdn.sfmovies.org/images/background.201408270533.jpg');
 	-webkit-background-size: 100% 100%;
 	-moz-background-size: 100% 100%;
 	-o-background-size: 100% 100%;
@@ -66,6 +66,11 @@ span.movieTitle {
 	font-weight: bold;
 	line-height: 2em;
 	font-size: 1.5em;
+}
+
+span.funFacts {
+	white-space: normal;
+	font-style: italic;
 }
 
 div.shareButtons {

@@ -22,11 +22,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.ozan.sfmovies.model.geodata.AddressConverter;
+import com.ozan.sfmovies.model.geodata.Coordinates;
+import com.ozan.sfmovies.utilities.Utilities;
 
 public class Cache
 {
 	private static Logger logger = LoggerFactory.getLogger(Cache.class);
-	private final List<Movie> movies = new ArrayList<Movie>();
+	private final List<Movie> movies = new ArrayList<>();
 	@Autowired
 	private AddressConverter addressConverter;
 	private URL cdnFormattedDataFile;
@@ -47,8 +49,8 @@ public class Cache
 			final ObjectMapper mapper = new ObjectMapper();
 			logger.debug("Reading data...");
 			movies = mapper.readValue(reader, new TypeReference<List<Movie>>()
-			{
-			});
+					{
+					});
 			logger.debug("CDN formatted data read.");
 		}
 		catch (final IOException e)
@@ -58,7 +60,7 @@ public class Cache
 		}
 		for (final Movie newMovie : movies)
 		{
-			newMovie.getMovieLocations().remove(null);
+			newMovie.getMovieSummary().getMovieLocations().remove(null);
 			this.addMovie(newMovie);
 		}
 	}
@@ -72,8 +74,8 @@ public class Cache
 			final ObjectMapper mapper = new ObjectMapper();
 			logger.debug("Reading raw data...");
 			newRawMovies = mapper.readValue(reader, new TypeReference<List<RawMovieData>>()
-			{
-			});
+					{
+					});
 			logger.debug("CDN raw data read.");
 		}
 		catch (final IOException e)
@@ -97,60 +99,70 @@ public class Cache
 		return reader;
 	}
 
-	public List<Movie> getAllMovies()
+	public List<MovieSummary> getMovieSummaries(final Coordinates southWestCorner, final Coordinates northEastCorner)
 	{
-		return this.movies;
-	}
-
-	public List<Movie> getMoviesByReleaseYear(final Integer releaseYear)
-	{
-		if (releaseYear == null)
-		{
-			return null;
-		}
-		final List<Movie> result = new ArrayList<Movie>();
+		final List<MovieSummary> result = new ArrayList<>();
 		for (final Movie movie : this.movies)
 		{
-			if (releaseYear.equals(movie.getReleaseYear()))
+			final List<MovieLocation> matchingLocations = movie.isWithinBoundries(southWestCorner, northEastCorner);
+			if (matchingLocations != null)
 			{
-				result.add(movie);
+				result.add(new MovieSummary(movie, matchingLocations));
 			}
 		}
 		return result;
 	}
 
-	public List<Movie> getMoviesByActor(final String actor)
+	public List<MovieSummary> getMoviesByReleaseYear(final Integer releaseYear)
 	{
-		if (actor == null || actor.isEmpty())
+		if (releaseYear == null)
 		{
 			return null;
 		}
-		final List<Movie> result = new ArrayList<Movie>();
+		final List<MovieSummary> result = new ArrayList<>();
+		for (final Movie movie : this.movies)
+		{
+			if (releaseYear.equals(movie.getReleaseYear()))
+			{
+				result.add(movie.getMovieSummary());
+			}
+		}
+		return result;
+	}
+
+	public List<MovieSummary> getMoviesByActor(final String actor)
+	{
+		if ((actor == null) || actor.isEmpty())
+		{
+			return null;
+		}
+		final List<MovieSummary> result = new ArrayList<>();
 		for (final Movie movie : this.movies)
 		{
 			for (final String knownActor : movie.getActors())
 			{
 				if (this.stringMatch(knownActor, actor))
 				{
-					result.add(movie);
+					result.add(movie.getMovieSummary());
+					break;
 				}
 			}
 		}
 		return result;
 	}
 
-	public List<Movie> getMoviesByDirector(final String director)
+	public List<MovieSummary> getMoviesByDirector(final String director)
 	{
-		if (director == null || director.isEmpty())
+		if ((director == null) || director.isEmpty())
 		{
 			return null;
 		}
-		final List<Movie> result = new ArrayList<Movie>();
+		final List<MovieSummary> result = new ArrayList<>();
 		for (final Movie movie : this.movies)
 		{
 			if (this.directorMatch(director, movie))
 			{
-				result.add(movie);
+				result.add(movie.getMovieSummary());
 			}
 		}
 		return result;
@@ -161,18 +173,18 @@ public class Cache
 		return this.stringMatch(movie.getDirector(), director);
 	}
 
-	public List<Movie> getMoviesByDistributor(final String distributor)
+	public List<MovieSummary> getMoviesByDistributor(final String distributor)
 	{
-		if (distributor == null || distributor.isEmpty())
+		if ((distributor == null) || distributor.isEmpty())
 		{
 			return null;
 		}
-		final List<Movie> result = new ArrayList<Movie>();
+		final List<MovieSummary> result = new ArrayList<>();
 		for (final Movie movie : this.movies)
 		{
 			if (this.distributorMatch(distributor, movie))
 			{
-				result.add(movie);
+				result.add(movie.getMovieSummary());
 			}
 		}
 		return result;
@@ -183,18 +195,18 @@ public class Cache
 		return this.stringMatch(movie.getDistributor(), distributor);
 	}
 
-	public List<Movie> getMoviesByProductionCompany(final String productionCompany)
+	public List<MovieSummary> getMoviesByProductionCompany(final String productionCompany)
 	{
-		if (productionCompany == null || productionCompany.isEmpty())
+		if ((productionCompany == null) || productionCompany.isEmpty())
 		{
 			return null;
 		}
-		final List<Movie> result = new ArrayList<Movie>();
+		final List<MovieSummary> result = new ArrayList<>();
 		for (final Movie movie : this.movies)
 		{
 			if (this.productionCompanyMatch(productionCompany, movie))
 			{
-				result.add(movie);
+				result.add(movie.getMovieSummary());
 			}
 		}
 		return result;
@@ -205,18 +217,18 @@ public class Cache
 		return this.stringMatch(movie.getProductionCompany(), productionCompany);
 	}
 
-	public List<Movie> getMoviesByTitle(final String title)
+	public List<MovieSummary> getMoviesByTitle(final String title)
 	{
-		if (title == null || title.isEmpty())
+		if ((title == null) || title.isEmpty())
 		{
 			return null;
 		}
-		final List<Movie> result = new ArrayList<Movie>();
+		final List<MovieSummary> result = new ArrayList<>();
 		for (final Movie movie : this.movies)
 		{
 			if (this.titleMatch(title, movie))
 			{
-				result.add(movie);
+				result.add(movie.getMovieSummary());
 			}
 		}
 		return result;
@@ -224,21 +236,21 @@ public class Cache
 
 	private boolean titleMatch(final String title, final Movie movie)
 	{
-		return this.stringMatch(movie.getTitle(), title);
+		return this.stringMatch(movie.getMovieSummary().getTitle(), title);
 	}
 
-	public List<Movie> getMoviesByWriter(final String writer)
+	public List<MovieSummary> getMoviesByWriter(final String writer)
 	{
-		if (writer == null || writer.isEmpty())
+		if ((writer == null) || writer.isEmpty())
 		{
 			return null;
 		}
-		final List<Movie> result = new ArrayList<Movie>();
+		final List<MovieSummary> result = new ArrayList<>();
 		for (final Movie movie : this.movies)
 		{
 			if (this.writerMatch(writer, movie))
 			{
-				result.add(movie);
+				result.add(movie.getMovieSummary());
 			}
 		}
 		return result;
@@ -249,21 +261,20 @@ public class Cache
 		return this.stringMatch(movie.getWriter(), writer);
 	}
 
-	public List<Movie> getMoviesById(final UUID movieId)
+	public Movie getMovieById(final UUID movieId)
 	{
 		if (movieId == null)
 		{
 			return null;
 		}
-		final List<Movie> result = new ArrayList<Movie>();
 		for (final Movie movie : this.movies)
 		{
-			if (movie.getId().equals(movieId))
+			if (movie.getMovieSummary().getId().equals(movieId))
 			{
-				result.add(movie);
+				return movie;
 			}
 		}
-		return result;
+		return null;
 	}
 
 	private MovieLocation queryLocation(final String rawAddress)
@@ -279,7 +290,7 @@ public class Cache
 			try
 			{
 				// Avoid Google Maps API rate limit
-				Thread.sleep(100);
+				Thread.sleep(200);
 			}
 			catch (final InterruptedException e)
 			{
@@ -307,11 +318,11 @@ public class Cache
 		{
 			if (existingMovie.equals(newMovie))
 			{
-				for (final MovieLocation newMovieLocation : newMovie.getMovieLocations())
+				for (final MovieLocation newMovieLocation : newMovie.getMovieSummary().getMovieLocations())
 				{
-					if (newMovieLocation != null && !existingMovie.getMovieLocations().contains(newMovieLocation))
+					if ((newMovieLocation != null) && !existingMovie.getMovieSummary().getMovieLocations().contains(newMovieLocation))
 					{
-						existingMovie.getMovieLocations().add(newMovieLocation);
+						existingMovie.getMovieSummary().getMovieLocations().add(newMovieLocation);
 					}
 				}
 				return;
@@ -331,19 +342,25 @@ public class Cache
 			if (existingMovie.equals(newRawMovie))
 			{
 				final MovieLocation newMovieLocation = this.queryLocation(newRawMovie.getLocations());
+				if (newMovieLocation == null)
+				{
+					return;
+				}
+				newMovieLocation.setFunFacts(Utilities.trim(newRawMovie.getFunFacts()));
 				// We have an existing movie. We should check if that object has
 				// the location, otherwise add it to the array.
-				if (existingMovie.getMovieLocations().contains(newMovieLocation))
+				if (existingMovie.getMovieSummary().getMovieLocations().contains(newMovieLocation))
 				{
-					logger.debug("Location [" + newMovieLocation + "] exists in Movie [" + existingMovie.getTitle() + "] does contain this location.");
-					return;
+					logger.debug("Location [" + newMovieLocation + "] exists in Movie [" + existingMovie.getMovieSummary().getTitle()
+							+ "] does contain this location.");
 				}
 				else
 				{
-					logger.debug("Movie [" + existingMovie.getTitle() + "] does not contain the location [" + newMovieLocation + "], adding...");
-					existingMovie.getMovieLocations().add(newMovieLocation);
-					return;
+					logger.debug("Movie [" + existingMovie.getMovieSummary().getTitle() + "] does not contain the location [" + newMovieLocation
+							+ "], adding...");
+					existingMovie.getMovieSummary().getMovieLocations().add(newMovieLocation);
 				}
+				return;
 			}
 		}
 		logger.debug("Movie [" + newRawMovie.getTitle() + "] is new.");
@@ -351,6 +368,7 @@ public class Cache
 		final MovieLocation newMovieLocation = this.queryLocation(newRawMovie.getLocations());
 		if (newMovieLocation != null)
 		{
+			newMovieLocation.setFunFacts(Utilities.trim(newRawMovie.getFunFacts()));
 			newMovie.addMovieLocation(newMovieLocation);
 		}
 		logger.debug("New movie: " + newMovie.toString());
@@ -364,7 +382,7 @@ public class Cache
 
 	public SearchResultCollection search(final String originalQuery)
 	{
-		if (originalQuery == null || originalQuery.isEmpty())
+		if ((originalQuery == null) || originalQuery.isEmpty())
 		{
 			return null;
 		}
@@ -396,7 +414,7 @@ public class Cache
 			}
 			if (this.titleMatch(query, movie))
 			{
-				final String title = movie.getTitle();
+				final String title = movie.getMovieSummary().getTitle();
 				searchResult.add(new SearchResult(title, DataType.TITLE));
 			}
 			if (this.writerMatch(query, movie))
@@ -417,7 +435,7 @@ public class Cache
 
 	private boolean stringMatch(final String haystack, final String needle)
 	{
-		if (haystack == null || needle == null)
+		if ((haystack == null) || (needle == null))
 		{
 			return false;
 		}
@@ -441,4 +459,13 @@ public class Cache
 	{
 		this.cdnRawDataFile = cdnRawDataFile;
 	}
+
+	/**
+	 * @return the movies
+	 */
+	public List<Movie> getMovies()
+	{
+		return this.movies;
+	}
+
 }

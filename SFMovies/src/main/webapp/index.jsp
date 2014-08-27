@@ -1,3 +1,4 @@
+
 <%
 	String website = "http://www.sfmovies.org/";
 	String cdnHost = "http://cdn.sfmovies.org/";
@@ -20,29 +21,23 @@
 	content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
 <link rel="icon" href="/favicon.ico" type="image/x-icon">
-<link rel="stylesheet" href="<%=cdnHost%>css/sfMovies.min.css" />
-<link rel="stylesheet" href="<%=cdnHost%>css/sfMoviesMobile.min.css"
+<link rel="stylesheet"
+	href="<%=cdnHost%>css/sfMovies.201408270533.min.css" />
+<link rel="stylesheet"
+	href="<%=cdnHost%>css/sfMoviesMobile.201408270533.min.css"
 	media="only screen and (max-device-width:480px)" />
-<script src="<%=cdnHost%>js/jquery.min.js"></script>
-<script src="<%=cdnHost%>js/googleMaps.min.js"></script>
-<script type="text/javascript" src="<%=cdnHost%>js/markerClusterer.min.js"></script>
-<script type="text/javascript" src="<%=cdnHost%>js/oms.min.js"></script>
+<script src="<%=cdnHost%>js/jquery.201408270533.min.js"></script>
+<script src="<%=cdnHost%>js/googleMaps.201408270533.min.js"></script>
 <script type="text/javascript"
-	src="<%=cdnHost%>js/jquery.autocomplete.min.js"></script>
-<script type="text/javascript" src="<%=cdnHost%>js/sfMovies.min.js"></script>
+	src="<%=cdnHost%>js/markerClusterer.201408270533.min.js"></script>
+<script type="text/javascript"
+	src="<%=cdnHost%>js/oms.201408270533.min.js"></script>
+<script type="text/javascript"
+	src="<%=cdnHost%>js/jquery.autocomplete.201408270533.min.js"></script>
+<script type="text/javascript"
+	src="<%=cdnHost%>js/sfMovies.201408270753.min.js"></script>
 <script>
-	function showAllMarkers()
-    {
-	    var movieId = getQueryString("movieId");
-	    if (movieId == null || movieId.trim() == '')
-	    {
-		    showMarkers('all', '');
-	    }
-	    else
-	    {
-		    showMarkers('movieId', movieId);
-	    }
-    }
+	setMovieId(getQueryString('movieId'));
 </script>
 </head>
 <body>
@@ -57,4 +52,3 @@
 	<div id="map"></div>
 </body>
 </html>
-
