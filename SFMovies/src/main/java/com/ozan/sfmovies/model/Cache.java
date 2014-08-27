@@ -47,8 +47,8 @@ public class Cache
 			final ObjectMapper mapper = new ObjectMapper();
 			logger.debug("Reading data...");
 			movies = mapper.readValue(reader, new TypeReference<List<Movie>>()
-					{
-					});
+			{
+			});
 			logger.debug("CDN formatted data read.");
 		}
 		catch (final IOException e)
@@ -72,8 +72,8 @@ public class Cache
 			final ObjectMapper mapper = new ObjectMapper();
 			logger.debug("Reading raw data...");
 			newRawMovies = mapper.readValue(reader, new TypeReference<List<RawMovieData>>()
-					{
-					});
+			{
+			});
 			logger.debug("CDN raw data read.");
 		}
 		catch (final IOException e)
@@ -302,10 +302,22 @@ public class Cache
 
 	public void addMovie(final Movie newMovie)
 	{
-		if (!this.movies.contains(newMovie))
+		// Rather use loop than contains method to add a new location
+		for (final Movie existingMovie : this.movies)
 		{
-			this.movies.add(newMovie);
+			if (existingMovie.equals(newMovie))
+			{
+				for (final MovieLocation newMovieLocation : newMovie.getMovieLocations())
+				{
+					if (newMovieLocation != null && !existingMovie.getMovieLocations().contains(newMovieLocation))
+					{
+						existingMovie.getMovieLocations().add(newMovieLocation);
+					}
+				}
+				return;
+			}
 		}
+		this.movies.add(newMovie);
 	}
 
 	public void addRawMovieData(final RawMovieData newRawMovie)

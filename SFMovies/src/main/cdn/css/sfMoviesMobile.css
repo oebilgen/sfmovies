@@ -2,6 +2,10 @@ body {
 	background-image: none;
 }
 
+#fullScreenControlDiv {
+	display: none;
+}
+
 #header {
 	width: 100%;
 	height: 26px;
@@ -19,8 +23,11 @@ body {
 	height: 100%;
 }
 
-span.movieTitle
-{
+span.movieTitle {
 	line-height: 1em;
-	font-size:1.2em;
+	font-size: 1.2em;
+}
+
+div.infoWindow {
+	white-space: normal;
 }

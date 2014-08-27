@@ -34,6 +34,18 @@ html, body {
 	outline: none;
 }
 
+#fullScreenControlDiv {
+	position: fixed;
+	top: 5px;
+	right: 5px;
+	z-index: 100000;
+}
+
+#fullScreenButton {
+	margin: 58px 72px auto auto;
+	font-size: 24px;
+}
+
 #map {
 	width: 90%;
 	height: 450px;
@@ -47,11 +59,12 @@ div.infoWindow {
 	font-size: 16px;
 	line-height: 1.5em;
 	padding: 1em 1em 1.5em 1em;
+	white-space: nowrap;
 }
 
 span.movieTitle {
 	font-weight: bold;
-	line-height: 3em;
+	line-height: 2em;
 	font-size: 1.5em;
 }
 
