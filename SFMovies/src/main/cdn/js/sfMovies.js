@@ -50,7 +50,7 @@ function initializeMap()
 	});
 	google.maps.event.addListener(map, 'idle', function()
 	{
-		if (lastQuery != '')
+		if (lastQuery != '' && lastMapBounds != null)
 		{
 			console.info('Last query is not empty [' + lastQuery + '], skipping map draw...');
 			return;
@@ -398,6 +398,8 @@ function createInfoWindowContent(movie)
 	        + encodeURIComponent(title + ' ' + movie.releaseYear + ' movie watch online') + '\');" value="Watch online"> ';
 	infoWindowContent += '<input type="button" onclick="window.open(\'http://www.amazon.com/s/ref=nb_sb_noss_1?field-keywords='
 	        + encodeURIComponent(title + ' ' + movie.releaseYear) + ' movie\');" value="Buy on Amazon"> ';
+	infoWindowContent += '<input type="button" onclick="window.open(\'http://google.com/search?q='
+	        + encodeURIComponent(title + ' ' + movie.releaseYear + ' movie imdb') + '&btnI\');" value="IMDb"> ';
 	infoWindowContent += '<input type="button" onclick="window.open(\'http://google.com/search?q='
 	        + encodeURIComponent(title + ' ' + movie.releaseYear + ' movie wikipedia') + '&btnI\');" value="Wikipedia"> ';
 	infoWindowContent += '<input type="button" onclick="window.open(\'/?movieId=' + movieSummary.id + '\');" value="Link"> ';

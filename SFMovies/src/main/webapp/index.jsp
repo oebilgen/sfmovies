@@ -22,7 +22,7 @@
 <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
 <link rel="icon" href="/favicon.ico" type="image/x-icon">
 <link rel="stylesheet"
-	href="<%=cdnHost%>css/sfMovies.201408292141.min.css" />
+	href="<%=cdnHost%>css/sfMovies.201408300317.min.css" />
 <link rel="stylesheet"
 	href="<%=cdnHost%>css/sfMoviesMobile.201408291854.min.css"
 	media="only screen and (max-device-width:480px)" />
@@ -35,8 +35,7 @@
 <script type="text/javascript"
 	src="<%=cdnHost%>js/jquery.autocomplete.201408270533.min.js"></script>
 <script type="text/javascript"
-	src="<%=cdnHost%>js/sfMovies.201408292141.min.js"></script>
-
+	src="<%=cdnHost%>js/sfMovies.201408300317.min.js"></script>
 <script>
 	setMovieId(getQueryString('movieId'));
 </script>
