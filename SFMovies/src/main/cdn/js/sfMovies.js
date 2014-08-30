@@ -67,10 +67,6 @@ function initializeMap()
 		}
 		reloadRequested = false;
 	});
-	google.maps.event.addListener(map, "click", function(event)
-	{
-		infoWindow.close();
-	});
 	overlappingMarkerSpiderfier = new OverlappingMarkerSpiderfier(map,
 	{
 	    markersWontMove : true,

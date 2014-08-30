@@ -35,7 +35,7 @@
 <script type="text/javascript"
 	src="<%=cdnHost%>js/jquery.autocomplete.201408270533.min.js"></script>
 <script type="text/javascript"
-	src="<%=cdnHost%>js/sfMovies.201408300317.min.js"></script>
+	src="<%=cdnHost%>js/sfMovies.201408300340.min.js"></script>
 <script>
 	setMovieId(getQueryString('movieId'));
 </script>
