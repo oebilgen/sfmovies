@@ -11,6 +11,11 @@ public class SearchResult implements Serializable, Comparable<SearchResult>
 	@JsonProperty("data")
 	private DataType dataType;
 
+	public SearchResult()
+	{
+
+	}
+
 	public SearchResult(final String value, final DataType dataType)
 	{
 		if (value == null)
@@ -54,8 +59,8 @@ public class SearchResult implements Serializable, Comparable<SearchResult>
 	{
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + (this.dataType == null ? 0 : this.dataType.hashCode());
-		result = prime * result + (this.value == null ? 0 : this.value.hashCode());
+		result = (prime * result) + (this.dataType == null ? 0 : this.dataType.hashCode());
+		result = (prime * result) + (this.value == null ? 0 : this.value.hashCode());
 		return result;
 	}
 

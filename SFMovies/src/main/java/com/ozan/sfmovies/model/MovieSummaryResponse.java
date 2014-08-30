@@ -14,6 +14,11 @@ public class MovieSummaryResponse implements Serializable
 	private String errorMessage = null;
 	private List<MovieSummary> data = null;
 
+	public MovieSummaryResponse()
+	{
+
+	}
+
 	public MovieSummaryResponse(final String errorMessage)
 	{
 		this.errorMessage = errorMessage;
