@@ -22,20 +22,23 @@
 <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
 <link rel="icon" href="/favicon.ico" type="image/x-icon">
 <link rel="stylesheet"
-	href="<%=cdnHost%>css/sfMovies.201408270533.min.css" />
+	href="<%=cdnHost%>css/sfMovies.201408281737.min.css" />
 <link rel="stylesheet"
-	href="<%=cdnHost%>css/sfMoviesMobile.201408270533.min.css"
+	href="<%=cdnHost%>css/sfMoviesMobile.201408291854.min.css"
 	media="only screen and (max-device-width:480px)" />
 <script src="<%=cdnHost%>js/jquery.201408270533.min.js"></script>
-<script src="<%=cdnHost%>js/googleMaps.201408270533.min.js"></script>
+<script src="//maps.googleapis.com/maps/api/js"></script>
 <script type="text/javascript"
 	src="<%=cdnHost%>js/markerClusterer.201408270533.min.js"></script>
 <script type="text/javascript"
 	src="<%=cdnHost%>js/oms.201408270533.min.js"></script>
 <script type="text/javascript"
 	src="<%=cdnHost%>js/jquery.autocomplete.201408270533.min.js"></script>
-<script type="text/javascript"
-	src="<%=cdnHost%>js/sfMovies.201408270753.min.js"></script>
+<!-- <script type="text/javascript"
+	src="<%=cdnHost%>js/sfMovies.201408281737.min.js"></script>
+-->
+<script type="text/javascript" src="sfMovies.js"></script>
+
 <script>
 	setMovieId(getQueryString('movieId'));
 </script>
