@@ -17,7 +17,7 @@
 	<context:property-placeholder location="file:/etc/sfmovies/sfMovies.properties"
 		order="-1" ignore-unresolvable="true" ignore-resource-not-found="true" />
 
-	<bean id="cache" class="com.ozan.sfmovies.model.Cache">
+	<bean id="cache" class="com.ozan.sfmovies.data.Cache">
 		<property name="cdnRawDataFile" value="${cdnRawDataFile}" />
 		<property name="cdnFormattedDataFile" value="${cdnFormattedDataFile}" />
 	</bean>

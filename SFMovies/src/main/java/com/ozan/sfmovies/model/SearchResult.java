@@ -1,8 +1,11 @@
+/**
+ * (c) San Francisco Movies - Author: Ozan Eren Bilgen (oebilgen@gmail.com)
+ */
 package com.ozan.sfmovies.model;
-
 import java.io.Serializable;
 
 import org.codehaus.jackson.annotate.JsonProperty;
+
 
 public class SearchResult implements Serializable, Comparable<SearchResult>
 {

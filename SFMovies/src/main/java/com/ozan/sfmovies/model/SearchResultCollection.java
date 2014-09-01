@@ -1,9 +1,15 @@
+/**
+ * (c) San Francisco Movies - Author: Ozan Eren Bilgen (oebilgen@gmail.com)
+ */
+
 package com.ozan.sfmovies.model;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+;
 
 public class SearchResultCollection implements Serializable
 {
@@ -51,7 +57,7 @@ public class SearchResultCollection implements Serializable
 	{
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + (this.suggestions == null ? 0 : this.suggestions.hashCode());
+		result = (prime * result) + (this.suggestions == null ? 0 : this.suggestions.hashCode());
 		return result;
 	}
 

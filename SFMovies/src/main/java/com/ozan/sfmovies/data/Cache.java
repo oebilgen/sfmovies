@@ -1,4 +1,7 @@
-package com.ozan.sfmovies.model;
+/**
+ * (c) San Francisco Movies - Author: Ozan Eren Bilgen (oebilgen@gmail.com)
+ */
+package com.ozan.sfmovies.data;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -21,6 +24,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.ozan.sfmovies.model.DataType;
+import com.ozan.sfmovies.model.Movie;
+import com.ozan.sfmovies.model.MovieLocation;
+import com.ozan.sfmovies.model.MovieSummary;
+import com.ozan.sfmovies.model.RawMovieData;
+import com.ozan.sfmovies.model.SearchResult;
+import com.ozan.sfmovies.model.SearchResultCollection;
 import com.ozan.sfmovies.model.geodata.AddressConverter;
 import com.ozan.sfmovies.model.geodata.Coordinates;
 import com.ozan.sfmovies.utilities.Utilities;
@@ -40,17 +50,20 @@ public class Cache
 		this.loadFormattedCdnData();
 	}
 
+	/**
+	 * Loads formatted data from CDN to in-memory cache.
+	 */
 	public void loadFormattedCdnData()
 	{
 		final ArrayList<Movie> movies;
 		try
 		{
-			final BufferedReader reader = this.getCdnInputStream(this.cdnFormattedDataFile);
+			final BufferedReader reader = this.createReaderFromUrl(this.cdnFormattedDataFile);
 			final ObjectMapper mapper = new ObjectMapper();
 			logger.debug("Reading data...");
 			movies = mapper.readValue(reader, new TypeReference<List<Movie>>()
-					{
-					});
+			{
+			});
 			logger.debug("CDN formatted data read.");
 		}
 		catch (final IOException e)
@@ -65,17 +78,20 @@ public class Cache
 		}
 	}
 
+	/**
+	 * Loads raw movie data to in-memory cache.
+	 */
 	public void loadRawData()
 	{
 		final ArrayList<RawMovieData> newRawMovies;
 		try
 		{
-			final BufferedReader reader = this.getCdnInputStream(this.cdnRawDataFile);
+			final BufferedReader reader = this.createReaderFromUrl(this.cdnRawDataFile);
 			final ObjectMapper mapper = new ObjectMapper();
 			logger.debug("Reading raw data...");
 			newRawMovies = mapper.readValue(reader, new TypeReference<List<RawMovieData>>()
-					{
-					});
+			{
+			});
 			logger.debug("CDN raw data read.");
 		}
 		catch (final IOException e)
@@ -89,16 +105,34 @@ public class Cache
 		}
 	}
 
-	private BufferedReader getCdnInputStream(final URL cdnDataFile) throws IOException
+	/**
+	 * Creates a stream reader for a given URL
+	 *
+	 * @param url
+	 *            the URL to read from
+	 * @return a stream reader
+	 * @throws IOException
+	 *             if connection fails
+	 */
+	private BufferedReader createReaderFromUrl(final URL url) throws IOException
 	{
-		logger.debug("Opening connection to CDN data file [" + cdnDataFile + "]...");
-		final URLConnection urlConnection = cdnDataFile.openConnection();
+		logger.debug("Opening connection to [" + url + "]...");
+		final URLConnection urlConnection = url.openConnection();
 		logger.debug("Connection established.");
 		final InputStream inputStream = urlConnection.getInputStream();
 		final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 		return reader;
 	}
 
+	/**
+	 * the list of movies in the vincinity
+	 *
+	 * @param southWestCorner
+	 *            South West corner of the map
+	 * @param northEastCorner
+	 *            North East corner of the map
+	 * @return list of movies
+	 */
 	public List<MovieSummary> getMovieSummaries(final Coordinates southWestCorner, final Coordinates northEastCorner)
 	{
 		final List<MovieSummary> result = new ArrayList<>();
@@ -113,6 +147,13 @@ public class Cache
 		return result;
 	}
 
+	/**
+	 * List of movies in a given year
+	 *
+	 * @param releaseYear
+	 *            The 4 digit year
+	 * @return list of movies
+	 */
 	public List<MovieSummary> getMoviesByReleaseYear(final Integer releaseYear)
 	{
 		if (releaseYear == null)
@@ -130,6 +171,13 @@ public class Cache
 		return result;
 	}
 
+	/**
+	 * List of movies by actor
+	 *
+	 * @param actor
+	 *            the actor's name
+	 * @return list of movies
+	 */
 	public List<MovieSummary> getMoviesByActor(final String actor)
 	{
 		if ((actor == null) || actor.isEmpty())
@@ -151,6 +199,13 @@ public class Cache
 		return result;
 	}
 
+	/**
+	 * List of movies by director
+	 *
+	 * @param director
+	 *            director's name
+	 * @return list of movies
+	 */
 	public List<MovieSummary> getMoviesByDirector(final String director)
 	{
 		if ((director == null) || director.isEmpty())
@@ -173,6 +228,13 @@ public class Cache
 		return this.stringMatch(movie.getDirector(), director);
 	}
 
+	/**
+	 * List of movies by distributor
+	 *
+	 * @param distributor
+	 *            distributor's name
+	 * @return list of movies
+	 */
 	public List<MovieSummary> getMoviesByDistributor(final String distributor)
 	{
 		if ((distributor == null) || distributor.isEmpty())
@@ -195,6 +257,13 @@ public class Cache
 		return this.stringMatch(movie.getDistributor(), distributor);
 	}
 
+	/**
+	 * List of movies by production company
+	 *
+	 * @param productionCompany
+	 *            production company's name
+	 * @return list of movies
+	 */
 	public List<MovieSummary> getMoviesByProductionCompany(final String productionCompany)
 	{
 		if ((productionCompany == null) || productionCompany.isEmpty())
@@ -217,6 +286,13 @@ public class Cache
 		return this.stringMatch(movie.getProductionCompany(), productionCompany);
 	}
 
+	/**
+	 * List of movies by title
+	 *
+	 * @param title
+	 *            movie title
+	 * @return list of movies
+	 */
 	public List<MovieSummary> getMoviesByTitle(final String title)
 	{
 		if ((title == null) || title.isEmpty())
@@ -239,6 +315,13 @@ public class Cache
 		return this.stringMatch(movie.getMovieSummary().getTitle(), title);
 	}
 
+	/**
+	 * List of movies by writer
+	 *
+	 * @param writer
+	 *            writer's name
+	 * @return list of movies
+	 */
 	public List<MovieSummary> getMoviesByWriter(final String writer)
 	{
 		if ((writer == null) || writer.isEmpty())
@@ -261,6 +344,13 @@ public class Cache
 		return this.stringMatch(movie.getWriter(), writer);
 	}
 
+	/**
+	 * Returns a given movie
+	 *
+	 * @param movieId
+	 *            ID of the movie
+	 * @return the movie
+	 */
 	public Movie getMovieById(final UUID movieId)
 	{
 		if (movieId == null)
@@ -277,6 +367,13 @@ public class Cache
 		return null;
 	}
 
+	/**
+	 * Converts an address into a movie location via Google Maps service.
+	 *
+	 * @param rawAddress
+	 *            the unformatted address
+	 * @return the coordinates and formatted address
+	 */
 	private MovieLocation queryLocation(final String rawAddress)
 	{
 		if (rawAddress == null)
@@ -311,13 +408,29 @@ public class Cache
 		return null;
 	}
 
+	/**
+	 * Adds the movie if it isn't known or adds the movie location to the
+	 * current movie
+	 *
+	 * @param newMovie
+	 *            a new movie
+	 */
 	public void addMovie(final Movie newMovie)
 	{
+		if (newMovie.getMovieSummary().getTitle().equals("The Presidio"))
+		{
+			logger.debug("The Presidio!!");
+		}
 		// Rather use loop than contains method to add a new location
 		for (final Movie existingMovie : this.movies)
 		{
+			if (existingMovie.getMovieSummary().getTitle().equals("The Presidio"))
+			{
+				logger.debug("The Presidio 2!!");
+			}
 			if (existingMovie.equals(newMovie))
 			{
+				logger.debug(existingMovie.getMovieSummary().getTitle() + " exists.");
 				for (final MovieLocation newMovieLocation : newMovie.getMovieSummary().getMovieLocations())
 				{
 					if ((newMovieLocation != null) && !existingMovie.getMovieSummary().getMovieLocations().contains(newMovieLocation))
@@ -328,9 +441,20 @@ public class Cache
 				return;
 			}
 		}
+		if (newMovie.getMovieSummary().getTitle().equals("The Presidio"))
+		{
+			logger.debug(newMovie.getMovieSummary().getTitle() + " is new, adding.");
+		}
 		this.movies.add(newMovie);
 	}
 
+	/**
+	 * Converts a sfdata.org movie into sfmovies.org format, adds the movie if
+	 * it isn't known or adds the movie location to the current movie
+	 *
+	 * @param newRawMovie
+	 *            a sfdata.org movie
+	 */
 	public void addRawMovieData(final RawMovieData newRawMovie)
 	{
 		if (newRawMovie == null)
@@ -375,11 +499,21 @@ public class Cache
 		this.movies.add(newMovie);
 	}
 
+	/**
+	 * Clears the cache.
+	 */
 	public void clear()
 	{
 		this.movies.clear();
 	}
 
+	/**
+	 * Performs a free text search in the movie cache.
+	 *
+	 * @param originalQuery
+	 *            the query submitted by REST
+	 * @return list of matching parameter and its type
+	 */
 	public SearchResultCollection search(final String originalQuery)
 	{
 		if ((originalQuery == null) || originalQuery.isEmpty())

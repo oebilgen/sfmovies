@@ -1,3 +1,6 @@
+/**
+ * (c) San Francisco Movies - Author: Ozan Eren Bilgen (oebilgen@gmail.com)
+ */
 package com.ozan.sfmovies.model;
 
 import java.util.ArrayList;
@@ -256,10 +259,6 @@ public class Movie
 			{
 				return false;
 			}
-		}
-		else if (!this.actors.equals(other.actors))
-		{
-			return false;
 		}
 		if (this.director == null)
 		{

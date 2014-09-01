@@ -1,9 +1,12 @@
+/**
+ * (c) San Francisco Movies - Author: Ozan Eren Bilgen (oebilgen@gmail.com)
+ */
 package com.ozan.sfmovies.model;
-
 import java.io.Serializable;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
+
 
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 public class RawMovieData implements Serializable
@@ -231,17 +234,17 @@ public class RawMovieData implements Serializable
 	{
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + (this.actor1 == null ? 0 : this.actor1.hashCode());
-		result = prime * result + (this.actor2 == null ? 0 : this.actor2.hashCode());
-		result = prime * result + (this.actor3 == null ? 0 : this.actor3.hashCode());
-		result = prime * result + (this.director == null ? 0 : this.director.hashCode());
-		result = prime * result + (this.distributor == null ? 0 : this.distributor.hashCode());
-		result = prime * result + (this.funFacts == null ? 0 : this.funFacts.hashCode());
-		result = prime * result + (this.locations == null ? 0 : this.locations.hashCode());
-		result = prime * result + (this.productionCompany == null ? 0 : this.productionCompany.hashCode());
-		result = prime * result + (this.releaseYear == null ? 0 : this.releaseYear.hashCode());
-		result = prime * result + (this.title == null ? 0 : this.title.hashCode());
-		result = prime * result + (this.writer == null ? 0 : this.writer.hashCode());
+		result = (prime * result) + (this.actor1 == null ? 0 : this.actor1.hashCode());
+		result = (prime * result) + (this.actor2 == null ? 0 : this.actor2.hashCode());
+		result = (prime * result) + (this.actor3 == null ? 0 : this.actor3.hashCode());
+		result = (prime * result) + (this.director == null ? 0 : this.director.hashCode());
+		result = (prime * result) + (this.distributor == null ? 0 : this.distributor.hashCode());
+		result = (prime * result) + (this.funFacts == null ? 0 : this.funFacts.hashCode());
+		result = (prime * result) + (this.locations == null ? 0 : this.locations.hashCode());
+		result = (prime * result) + (this.productionCompany == null ? 0 : this.productionCompany.hashCode());
+		result = (prime * result) + (this.releaseYear == null ? 0 : this.releaseYear.hashCode());
+		result = (prime * result) + (this.title == null ? 0 : this.title.hashCode());
+		result = (prime * result) + (this.writer == null ? 0 : this.writer.hashCode());
 		return result;
 	}
 
