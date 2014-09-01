@@ -206,6 +206,12 @@ Upon loading the web page, the page retrieves the list of movies in the current 
 
 The search bar allows the user to search in movie attributes such as the title, the actors, the production company, etc. Each possible result is prepended with the type of the search result, e.g. searching for "lint" would have a result like "Clint Eastwood (actor)" as well as other possible matches. The user may click the search result to load the appropriate result, e.g. clicking "Clint Eastwood (actor)" will load only the movies where Clint Eastwood acted.
 
+## Engineering excellence
+
+* **Coding style:** This project uses automatic code formatted. The developer needs to load the existing formatters and code cleanup rules in https://github.com/oebilgen/sfmovies/tree/master/SFMovies/docs/codingStyle. They will automatically rewrite the files in formatting.
+* **JavaDoc:** JavaDocs can be found at https://github.com/oebilgen/sfmovies/blob/master/SFMovies/docs/javadoc/index.html
+* **Test automation:** Test cases are under src/test/java.
+
 ## Future work
 
 ### Model
@@ -233,3 +239,7 @@ for each movie in the new search result
    else add the marker as a valid marker
 remove all invalid markers
 ```
+
+### Testing
+
+* **Automatic model test:** Java object reflection can list the attributes of an object from where the test code can call getters and setters with the right type, as well as hashCode, toString and equals methods for increased code coverage.
